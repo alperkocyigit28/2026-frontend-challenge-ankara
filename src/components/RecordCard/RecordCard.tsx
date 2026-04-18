@@ -1,10 +1,10 @@
-import type { InvestigationRecord } from '../types/records'
-import { recordPreview } from '../lib/derive'
-import { formatDateTime, formatRelative } from '../lib/format'
-import SourceBadge from './SourceBadge'
-import PersonChip from './PersonChip'
-import LocationChip from './LocationChip'
-import styles from './RecordCard.module.css'
+import type { InvestigationRecord } from '../../types/records'
+import { recordPreview } from '../../lib/derive'
+import { formatDateTime, formatRelative } from '../../lib/format'
+import SourceBadge from '../SourceBadge'
+import PersonChip from '../PersonChip'
+import LocationChip from '../LocationChip'
+import styles from './style.module.css'
 
 interface Props {
   record: InvestigationRecord

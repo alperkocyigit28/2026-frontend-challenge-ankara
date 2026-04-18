@@ -1,4 +1,4 @@
-import styles from './StateView.module.css'
+import styles from './style.module.css'
 
 interface EmptyProps {
   title?: string

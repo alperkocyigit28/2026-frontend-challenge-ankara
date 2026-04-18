@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
-import { useDebounced } from '../hooks/useDebounced'
-import styles from './SearchInput.module.css'
+import { useDebounced } from '../../hooks/useDebounced'
+import styles from './style.module.css'
 
 interface Props {
   value: string

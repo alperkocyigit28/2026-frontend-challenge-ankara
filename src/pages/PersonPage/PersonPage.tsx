@@ -1,13 +1,13 @@
 import { useMemo } from 'react'
 import { Link, useParams } from 'react-router-dom'
-import RecordCard from '../components/RecordCard'
-import PersonChip from '../components/PersonChip'
-import { SkeletonGrid } from '../components/Skeleton'
-import { EmptyState, ErrorState } from '../components/StateView'
-import { useAllRecords } from '../hooks/useAllRecords'
-import { buildPeople, suspicionBreakdown } from '../lib/derive'
-import { formatDateTime } from '../lib/format'
-import styles from './PersonPage.module.css'
+import RecordCard from '../../components/RecordCard'
+import PersonChip from '../../components/PersonChip'
+import { SkeletonGrid } from '../../components/Skeleton'
+import { EmptyState, ErrorState } from '../../components/StateView'
+import { useAllRecords } from '../../hooks/useAllRecords'
+import { buildPeople, suspicionBreakdown } from '../../lib/derive'
+import { formatDateTime } from '../../lib/format'
+import styles from './style.module.css'
 
 export default function PersonPage() {
   const { name: rawName } = useParams<{ name: string }>()

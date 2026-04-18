@@ -1,5 +1,5 @@
-import { SOURCE_LABEL, type Source } from '../types/records'
-import styles from './SourceBadge.module.css'
+import { SOURCE_LABEL, type Source } from '../../types/records'
+import styles from './style.module.css'
 
 interface Props {
   source: Source

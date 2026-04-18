@@ -1,6 +1,6 @@
 import { NavLink, Link, Outlet } from 'react-router-dom'
 import clsx from 'clsx'
-import styles from './Layout.module.css'
+import styles from './style.module.css'
 
 const NAV = [
   { to: '/', label: 'Overview', end: true },

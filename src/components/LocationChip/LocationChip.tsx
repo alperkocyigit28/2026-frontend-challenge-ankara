@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom'
 import clsx from 'clsx'
-import styles from './Chips.module.css'
+import styles from './style.module.css'
 
 interface Props {
   name: string

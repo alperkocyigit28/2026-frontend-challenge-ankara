@@ -1,8 +1,8 @@
 import { Link } from 'react-router-dom'
-import type { Person } from '../types/entities'
-import type { InvestigationRecord } from '../types/records'
-import { suspicionBreakdown } from '../lib/derive'
-import styles from './SuspicionPanel.module.css'
+import type { Person } from '../../types/entities'
+import type { InvestigationRecord } from '../../types/records'
+import { suspicionBreakdown } from '../../lib/derive'
+import styles from './style.module.css'
 
 interface Props {
   people: Person[]

@@ -1,12 +1,12 @@
 import { useMemo } from 'react'
 import { Link } from 'react-router-dom'
-import SearchInput from '../components/SearchInput'
-import { SkeletonGrid } from '../components/Skeleton'
-import { EmptyState, ErrorState } from '../components/StateView'
-import { useAllRecords } from '../hooks/useAllRecords'
-import { useUrlQuery } from '../hooks/useUrlQuery'
-import { buildLocations } from '../lib/derive'
-import styles from './LocationsPage.module.css'
+import SearchInput from '../../components/SearchInput'
+import { SkeletonGrid } from '../../components/Skeleton'
+import { EmptyState, ErrorState } from '../../components/StateView'
+import { useAllRecords } from '../../hooks/useAllRecords'
+import { useUrlQuery } from '../../hooks/useUrlQuery'
+import { buildLocations } from '../../lib/derive'
+import styles from './style.module.css'
 
 export default function LocationsPage() {
   const { records, isLoading, isError, errors, refetch } = useAllRecords()

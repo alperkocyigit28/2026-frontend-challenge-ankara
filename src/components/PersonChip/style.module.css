@@ -1,0 +1,45 @@
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 10px;
+  font-size: 13px;
+  font-weight: 500;
+  border-radius: 999px;
+  text-decoration: none;
+  border: 1px solid var(--border);
+  background: var(--bg-elev);
+  color: var(--text-h);
+  line-height: 1.4;
+  transition:
+    background 0.12s ease,
+    border-color 0.12s ease,
+    color 0.12s ease;
+}
+.chip:hover {
+  background: var(--accent-bg);
+  border-color: var(--accent-border);
+  color: var(--accent-h);
+  text-decoration: none;
+}
+
+.person {
+  color: var(--text-h);
+}
+
+.podo {
+  background: var(--accent-bg);
+  border-color: var(--accent-border);
+  color: var(--accent-h);
+  font-weight: 600;
+}
+.podo:hover {
+  background: rgba(170, 59, 255, 0.14);
+  color: var(--accent-h);
+}
+
+.plain {
+  color: var(--text-soft);
+  font-style: italic;
+  font-size: 13px;
+}

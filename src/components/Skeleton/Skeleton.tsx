@@ -1,4 +1,4 @@
-import styles from './Skeleton.module.css'
+import styles from './style.module.css'
 
 interface BlockProps {
   width?: string | number

@@ -1,11 +1,11 @@
 import { useMemo } from 'react'
 import { Link, useParams } from 'react-router-dom'
-import RecordCard from '../components/RecordCard'
-import { SkeletonGrid } from '../components/Skeleton'
-import { EmptyState, ErrorState } from '../components/StateView'
-import { useAllRecords } from '../hooks/useAllRecords'
-import { buildLocations } from '../lib/derive'
-import styles from './PersonPage.module.css'
+import RecordCard from '../../components/RecordCard'
+import { SkeletonGrid } from '../../components/Skeleton'
+import { EmptyState, ErrorState } from '../../components/StateView'
+import { useAllRecords } from '../../hooks/useAllRecords'
+import { buildLocations } from '../../lib/derive'
+import styles from './style.module.css'
 
 export default function LocationPage() {
   const { name: rawName } = useParams<{ name: string }>()

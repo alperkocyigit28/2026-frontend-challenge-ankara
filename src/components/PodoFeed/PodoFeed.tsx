@@ -1,10 +1,10 @@
-import LocationChip from './LocationChip'
-import PersonChip from './PersonChip'
-import SourceBadge from './SourceBadge'
-import { formatDateTime, formatRelative } from '../lib/format'
-import { podoActivity } from '../lib/derive'
-import type { InvestigationRecord } from '../types/records'
-import styles from './PodoFeed.module.css'
+import LocationChip from '../LocationChip'
+import PersonChip from '../PersonChip'
+import SourceBadge from '../SourceBadge'
+import { formatDateTime, formatRelative } from '../../lib/format'
+import { podoActivity } from '../../lib/derive'
+import type { InvestigationRecord } from '../../types/records'
+import styles from './style.module.css'
 
 interface Props {
   records: InvestigationRecord[]

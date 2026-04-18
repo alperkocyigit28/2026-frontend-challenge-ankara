@@ -1,7 +1,7 @@
 import clsx from 'clsx'
-import { SOURCES } from '../api/forms'
-import { SOURCE_LABEL, type Source } from '../types/records'
-import styles from './SourceFilter.module.css'
+import { SOURCES } from '../../api/forms'
+import { SOURCE_LABEL, type Source } from '../../types/records'
+import styles from './style.module.css'
 
 interface Props {
   value: Source[]
