@@ -8,6 +8,7 @@ import LocationsPage from './pages/LocationsPage'
 import LocationPage from './pages/LocationPage'
 import TimelinePage from './pages/TimelinePage'
 import MapPage from './pages/MapPage'
+import BoardPage from './pages/BoardPage'
 import NotFoundPage from './pages/NotFoundPage'
 
 const queryClient = new QueryClient({
@@ -33,6 +34,7 @@ export default function App() {
             <Route path="/locations/:name" element={<LocationPage />} />
             <Route path="/timeline" element={<TimelinePage />} />
             <Route path="/map" element={<MapPage />} />
+            <Route path="/board" element={<BoardPage />} />
             <Route path="*" element={<NotFoundPage />} />
           </Route>
         </Routes>

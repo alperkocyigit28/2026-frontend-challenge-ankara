@@ -8,6 +8,7 @@ const NAV = [
   { to: '/locations', label: 'Locations' },
   { to: '/timeline', label: 'Timeline' },
   { to: '/map', label: 'Map' },
+  { to: '/board', label: 'Board' },
 ]
 
 export default function Layout() {

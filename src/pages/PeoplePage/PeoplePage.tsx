@@ -6,6 +6,7 @@ import { EmptyState, ErrorState } from '../../components/StateView'
 import { useAllRecords } from '../../hooks/useAllRecords'
 import { useUrlQuery } from '../../hooks/useUrlQuery'
 import { buildPeople } from '../../lib/derive'
+import { personKey } from '../../lib/person'
 import styles from './style.module.css'
 
 export default function PeoplePage() {
@@ -14,9 +15,9 @@ export default function PeoplePage() {
 
   const people = useMemo(() => buildPeople(records), [records])
   const filtered = useMemo(() => {
-    const q = query.trim().toLowerCase()
+    const q = personKey(query)
     if (!q) return people
-    return people.filter((p) => p.name.toLowerCase().includes(q))
+    return people.filter((p) => personKey(p.name).includes(q))
   }, [people, query])
 
   return (

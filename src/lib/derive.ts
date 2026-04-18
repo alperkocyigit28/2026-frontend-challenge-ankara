@@ -1,5 +1,6 @@
 import type { Person, Location } from '../types/entities'
 import type { InvestigationRecord } from '../types/records'
+import { canonicalPersonName, personKey } from './person'
 
 export function recordPeople(r: InvestigationRecord): string[] {
   switch (r.source) {
@@ -46,19 +47,16 @@ export function recordHeadline(r: InvestigationRecord): string {
   }
 }
 
-const canonical = (name: string) => name.trim()
-const key = (name: string) => name.trim().toLowerCase()
-
 export function buildPeople(records: InvestigationRecord[]): Person[] {
   const map = new Map<string, { name: string; records: InvestigationRecord[] }>()
 
   for (const r of records) {
     for (const raw of recordPeople(r)) {
-      const k = key(raw)
+      const k = personKey(raw)
       if (!k) continue
       let entry = map.get(k)
       if (!entry) {
-        entry = { name: canonical(raw), records: [] }
+        entry = { name: canonicalPersonName(raw), records: [] }
         map.set(k, entry)
       }
       entry.records.push(r)
@@ -89,15 +87,23 @@ export function buildPeople(records: InvestigationRecord[]): Person[] {
 }
 
 function lastSeenWith(name: string, records: InvestigationRecord[]): string[] {
-  const k = key(name)
-  const seen = new Set<string>()
+  const k = personKey(name)
+  const seen = new Map<string, string>()
   for (const r of records) {
     if (r.source !== 'sighting') continue
-    const other = key(r.person) === k ? r.seenWith : r.person
-    if (other && key(other) !== k) seen.add(other)
+    const other =
+      personKey(r.person) === k
+        ? r.seenWith
+        : personKey(r.seenWith) === k
+          ? r.person
+          : ''
+    const otherKey = personKey(other)
+    if (otherKey && otherKey !== k && !seen.has(otherKey)) {
+      seen.set(otherKey, canonicalPersonName(other))
+    }
     if (seen.size >= 3) break
   }
-  return [...seen]
+  return [...seen.values()]
 }
 
 export interface SuspicionReason {
@@ -116,11 +122,11 @@ export function suspicionBreakdown(
   name: string,
   records: InvestigationRecord[],
 ): SuspicionBreakdown {
-  const k = key(name)
+  const k = personKey(name)
   const reasons: SuspicionReason[] = []
 
   for (const r of records) {
-    if (r.source === 'tip' && key(r.suspect) === k) {
+    if (r.source === 'tip' && personKey(r.suspect) === k) {
       const points =
         r.confidence === 'high' ? 3 : r.confidence === 'medium' ? 2 : 1
       reasons.push({
@@ -132,8 +138,8 @@ export function suspicionBreakdown(
     }
     if (
       r.source === 'sighting' &&
-      (key(r.person) === 'podo' || key(r.seenWith) === 'podo') &&
-      (key(r.person) === k || key(r.seenWith) === k) &&
+      (personKey(r.person) === 'podo' || personKey(r.seenWith) === 'podo') &&
+      (personKey(r.person) === k || personKey(r.seenWith) === k) &&
       k !== 'podo'
     ) {
       reasons.push({
@@ -143,9 +149,15 @@ export function suspicionBreakdown(
         source: r.source,
       })
     }
-    if (r.source === 'message' && key(r.sender) === k && r.urgency === 'high') {
+    if (
+      r.source === 'message' &&
+      personKey(r.sender) === k &&
+      r.urgency === 'high'
+    ) {
       reasons.push({
-        label: `sent high-urgency message to ${r.recipient}`,
+        label: `sent high-urgency message to ${canonicalPersonName(
+          r.recipient,
+        )}`,
         points: 1,
         recordId: r.id,
         source: r.source,
@@ -171,7 +183,7 @@ export function podoActivity(
   limit = 5,
 ): InvestigationRecord[] {
   return records
-    .filter((r) => recordPeople(r).some((p) => key(p) === 'podo'))
+    .filter((r) => recordPeople(r).some((p) => personKey(p) === 'podo'))
     .slice(0, limit)
 }
 

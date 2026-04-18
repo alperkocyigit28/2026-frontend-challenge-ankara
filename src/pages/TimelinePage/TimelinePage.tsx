@@ -7,11 +7,11 @@ import { EmptyState, ErrorState } from '../../components/StateView'
 import { useAllRecords } from '../../hooks/useAllRecords'
 import { recordPeople, recordPreview, recordHeadline } from '../../lib/derive'
 import { formatDateTime } from '../../lib/format'
+import { personKey } from '../../lib/person'
 import type { InvestigationRecord } from '../../types/records'
 import styles from './style.module.css'
 
-const PODO = 'podo'
-const isPodo = (name: string) => name.trim().toLowerCase() === PODO
+const isPodo = (name: string) => personKey(name) === 'podo'
 
 function dayKey(d: Date): string {
   return d.toLocaleDateString(undefined, {

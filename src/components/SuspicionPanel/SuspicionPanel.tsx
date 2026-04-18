@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom'
 import type { Person } from '../../types/entities'
 import type { InvestigationRecord } from '../../types/records'
 import { suspicionBreakdown } from '../../lib/derive'
+import { personKey } from '../../lib/person'
 import styles from './style.module.css'
 
 interface Props {
@@ -12,7 +13,7 @@ interface Props {
 
 export default function SuspicionPanel({ people, records, limit = 4 }: Props) {
   const ranked = [...people]
-    .filter((p) => p.name.toLowerCase() !== 'podo' && p.suspicionScore > 0)
+    .filter((p) => personKey(p.name) !== 'podo' && p.suspicionScore > 0)
     .sort((a, b) => b.suspicionScore - a.suspicionScore)
     .slice(0, limit)
 

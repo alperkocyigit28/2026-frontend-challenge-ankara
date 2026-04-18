@@ -7,6 +7,7 @@ import { EmptyState, ErrorState } from '../../components/StateView'
 import { useAllRecords } from '../../hooks/useAllRecords'
 import { buildPeople, suspicionBreakdown } from '../../lib/derive'
 import { formatDateTime } from '../../lib/format'
+import { personKey } from '../../lib/person'
 import styles from './style.module.css'
 
 export default function PersonPage() {
@@ -16,7 +17,7 @@ export default function PersonPage() {
 
   const people = useMemo(() => buildPeople(records), [records])
   const person = useMemo(
-    () => people.find((p) => p.name.toLowerCase() === decoded.toLowerCase()),
+    () => people.find((p) => personKey(p.name) === personKey(decoded)),
     [people, decoded],
   )
 

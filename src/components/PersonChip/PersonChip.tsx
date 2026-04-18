@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom'
 import clsx from 'clsx'
+import { canonicalPersonName, personKey } from '../../lib/person'
 import styles from './style.module.css'
 
 interface Props {
@@ -10,13 +11,14 @@ interface Props {
 export default function PersonChip({ name, className }: Props) {
   const trimmed = name.trim()
   if (!trimmed) return <span className={styles.plain}>unknown</span>
-  const isPodo = trimmed.toLowerCase() === 'podo'
+  const canonical = canonicalPersonName(trimmed)
+  const isPodo = personKey(trimmed) === 'podo'
   return (
     <Link
-      to={`/people/${encodeURIComponent(trimmed)}`}
+      to={`/people/${encodeURIComponent(canonical)}`}
       className={clsx(styles.chip, styles.person, isPodo && styles.podo, className)}
     >
-      {trimmed}
+      {canonical}
     </Link>
   )
 }
