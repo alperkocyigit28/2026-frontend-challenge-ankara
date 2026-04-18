@@ -1,13 +1,30 @@
+import { useMemo } from 'react'
 import { SOURCES } from '../api/forms'
 import RecordCard from '../components/RecordCard'
+import SearchInput from '../components/SearchInput'
+import SourceFilter from '../components/SourceFilter'
 import { useAllRecords } from '../hooks/useAllRecords'
-import { SOURCE_LABEL } from '../types/records'
+import { useUrlList, useUrlQuery } from '../hooks/useUrlQuery'
+import { filterRecords } from '../lib/search'
+import { SOURCE_LABEL, type Source } from '../types/records'
 import styles from './HomePage.module.css'
 
 export default function HomePage() {
   const { bySource, records, isLoading, isError, errors } = useAllRecords()
+  const [query, setQuery] = useUrlQuery('q')
+  const [sourceList, setSourceList] = useUrlList('source')
 
-  const latest = records.slice(0, 6)
+  const activeSources = useMemo(
+    () => sourceList.filter((s): s is Source => SOURCES.includes(s as Source)),
+    [sourceList],
+  )
+
+  const filtered = useMemo(
+    () => filterRecords(records, query, activeSources),
+    [records, query, activeSources],
+  )
+
+  const hasFilters = Boolean(query) || activeSources.length > 0
 
   return (
     <>
@@ -40,17 +57,46 @@ export default function HomePage() {
         ))}
       </section>
 
-      <h2 className={styles.sectionTitle}>
-        Latest activity <small>{isLoading ? 'loading…' : `${records.length} total`}</small>
-      </h2>
-      <section className={styles.grid}>
-        {latest.map((r) => (
-          <RecordCard key={`${r.source}-${r.id}`} record={r} />
-        ))}
-        {!isLoading && latest.length === 0 && (
-          <p style={{ color: 'var(--text-soft)' }}>No records yet.</p>
-        )}
-      </section>
+      <div className={styles.sectionHead}>
+        <h2 className={styles.sectionTitle}>
+          {hasFilters ? 'Matching records' : 'Latest activity'}
+        </h2>
+        <span className={styles.count} aria-live="polite">
+          {isLoading
+            ? 'loading…'
+            : hasFilters
+              ? `${filtered.length} of ${records.length}`
+              : `${records.length} total`}
+        </span>
+        <div className={styles.searchWrap}>
+          <SearchInput
+            value={query}
+            onChange={setQuery}
+            placeholder="Search people, places, notes…"
+          />
+        </div>
+      </div>
+
+      <div className={styles.filters}>
+        <SourceFilter
+          value={activeSources}
+          onChange={(next) => setSourceList(next)}
+        />
+      </div>
+
+      {!isLoading && filtered.length === 0 ? (
+        <div className={styles.empty}>
+          {hasFilters
+            ? 'No records match the current filters.'
+            : 'No records yet.'}
+        </div>
+      ) : (
+        <section className={styles.grid}>
+          {(hasFilters ? filtered : filtered.slice(0, 12)).map((r) => (
+            <RecordCard key={`${r.source}-${r.id}`} record={r} />
+          ))}
+        </section>
+      )}
     </>
   )
 }

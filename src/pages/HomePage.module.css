@@ -1,5 +1,5 @@
 .header {
-  margin-bottom: 28px;
+  margin-bottom: 24px;
 }
 .subtitle {
   margin-top: 6px;
@@ -33,23 +33,44 @@
   margin-top: 4px;
 }
 
-.sectionTitle {
-  margin: 0 0 14px;
-  font-size: 16px;
+.sectionHead {
   display: flex;
-  align-items: baseline;
-  gap: 8px;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 14px;
 }
-.sectionTitle small {
-  font-weight: 400;
+.sectionTitle {
+  font-size: 16px;
+  margin: 0;
+}
+.count {
   color: var(--text-soft);
   font-size: 13px;
+}
+.searchWrap {
+  flex: 1 1 260px;
+  max-width: 360px;
+  margin-left: auto;
+}
+
+.filters {
+  margin-bottom: 16px;
 }
 
 .grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
   gap: 12px;
+}
+
+.empty {
+  padding: 32px;
+  text-align: center;
+  background: var(--bg-elev);
+  border: 1px dashed var(--border-strong);
+  border-radius: var(--radius-md);
+  color: var(--text-soft);
 }
 
 .errorBox {

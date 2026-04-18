@@ -1,9 +1,14 @@
 .header {
-  margin-bottom: 24px;
+  margin-bottom: 16px;
 }
 .subtitle {
   margin-top: 6px;
   color: var(--text-soft);
+}
+
+.search {
+  max-width: 360px;
+  margin-bottom: 20px;
 }
 
 .grid {
