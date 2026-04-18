@@ -1,0 +1,66 @@
+.header {
+  margin-bottom: 28px;
+}
+.subtitle {
+  margin-top: 6px;
+  color: var(--text-soft);
+}
+
+.stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 12px;
+  margin-bottom: 32px;
+}
+
+.stat {
+  padding: 16px;
+  background: var(--bg-elev);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-sm);
+}
+.statLabel {
+  font-size: 12px;
+  color: var(--text-soft);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.statValue {
+  font-size: 26px;
+  font-weight: 600;
+  color: var(--text-h);
+  margin-top: 4px;
+}
+
+.sectionTitle {
+  margin: 0 0 14px;
+  font-size: 16px;
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+.sectionTitle small {
+  font-weight: 400;
+  color: var(--text-soft);
+  font-size: 13px;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 12px;
+}
+
+.errorBox {
+  padding: 14px 16px;
+  border: 1px solid #f0c4c4;
+  background: #fff5f5;
+  border-radius: var(--radius-md);
+  color: #8a2c2c;
+  margin-bottom: 24px;
+}
+.errorBox ul {
+  margin: 8px 0 0 18px;
+  padding: 0;
+}

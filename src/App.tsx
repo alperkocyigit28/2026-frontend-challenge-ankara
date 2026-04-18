@@ -1,6 +1,8 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { BrowserRouter, Route, Routes } from 'react-router-dom'
+import Layout from './components/Layout'
 import HomePage from './pages/HomePage'
+import PeoplePage from './pages/PeoplePage'
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -17,8 +19,11 @@ export default function App() {
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>
         <Routes>
-          <Route path="/" element={<HomePage />} />
-          <Route path="*" element={<HomePage />} />
+          <Route element={<Layout />}>
+            <Route path="/" element={<HomePage />} />
+            <Route path="/people" element={<PeoplePage />} />
+            <Route path="*" element={<HomePage />} />
+          </Route>
         </Routes>
       </BrowserRouter>
     </QueryClientProvider>

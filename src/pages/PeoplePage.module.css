@@ -1,0 +1,62 @@
+.header {
+  margin-bottom: 24px;
+}
+.subtitle {
+  margin-top: 6px;
+  color: var(--text-soft);
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 12px;
+}
+
+.card {
+  padding: 16px;
+  background: var(--bg-elev);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-sm);
+  text-decoration: none;
+  color: inherit;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  transition: border-color 120ms, box-shadow 120ms, transform 120ms;
+}
+.card:hover {
+  border-color: var(--accent-border);
+  box-shadow: var(--shadow-md);
+  transform: translateY(-1px);
+  text-decoration: none;
+  color: inherit;
+}
+
+.name {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text-h);
+}
+.meta {
+  font-size: 13px;
+  color: var(--text-soft);
+}
+.badges {
+  display: flex;
+  gap: 6px;
+  margin-top: 8px;
+  flex-wrap: wrap;
+}
+.badge {
+  font-size: 11px;
+  padding: 2px 6px;
+  border-radius: 999px;
+  background: var(--accent-bg);
+  color: var(--accent);
+  font-weight: 500;
+}
+.suspicion {
+  background: #fde4e4;
+  color: #a11a1a;
+}

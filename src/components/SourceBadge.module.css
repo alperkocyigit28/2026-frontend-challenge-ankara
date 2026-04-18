@@ -1,0 +1,45 @@
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 2px 8px;
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1.6;
+  border-radius: 999px;
+  border: 1px solid transparent;
+  white-space: nowrap;
+}
+
+.checkin {
+  color: #0d6b6b;
+  background: #e0f5f3;
+  border-color: #b9e6e1;
+}
+.message {
+  color: #1c4cb0;
+  background: #e2ecfe;
+  border-color: #c1d4f7;
+}
+.sighting {
+  color: #8a5a0a;
+  background: #fbefd1;
+  border-color: #ebd9a6;
+}
+.note {
+  color: #44475a;
+  background: #edeef3;
+  border-color: #d6d8e0;
+}
+.tip {
+  color: #a11a1a;
+  background: #fde4e4;
+  border-color: #f4c5c5;
+}
+
+.dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 999px;
+  background: currentColor;
+}
