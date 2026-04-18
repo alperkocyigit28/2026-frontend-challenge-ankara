@@ -1,5 +1,6 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { BrowserRouter, Route, Routes } from 'react-router-dom'
+import HomePage from './pages/HomePage'
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -11,23 +12,13 @@ const queryClient = new QueryClient({
   },
 })
 
-function Placeholder() {
-  return (
-    <main style={{ padding: '48px', maxWidth: '720px', margin: '0 auto' }}>
-      <h1>Missing Podo — Investigation Dashboard</h1>
-      <p style={{ marginTop: '12px' }}>
-        Setup complete. Data layer and UI arrive in the next steps.
-      </p>
-    </main>
-  )
-}
-
 export default function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>
         <Routes>
-          <Route path="*" element={<Placeholder />} />
+          <Route path="/" element={<HomePage />} />
+          <Route path="*" element={<HomePage />} />
         </Routes>
       </BrowserRouter>
     </QueryClientProvider>
