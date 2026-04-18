@@ -25,11 +25,6 @@ export async function fetchSubmissions(
   formId: string,
   limit = 1000,
 ): Promise<RawSubmission[]> {
-  if (!API_KEY) {
-    throw new Error(
-      'Missing VITE_JOTFORM_API_KEY. Add it to .env.local and restart the dev server.',
-    )
-  }
   const url = `${API_BASE}/form/${formId}/submissions?apiKey=${API_KEY}&limit=${limit}`
   const res = await fetch(url)
   if (!res.ok) {
