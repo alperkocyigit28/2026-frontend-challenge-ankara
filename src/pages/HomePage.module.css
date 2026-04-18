@@ -66,6 +66,14 @@
   margin-left: auto;
 }
 
+@media (max-width: 560px) {
+  .searchWrap {
+    flex-basis: 100%;
+    max-width: 100%;
+    margin-left: 0;
+  }
+}
+
 .filters {
   margin-bottom: 16px;
 }

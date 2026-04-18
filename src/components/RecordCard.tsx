@@ -24,7 +24,11 @@ export default function RecordCard({ record }: Props) {
 
       <Headline record={record} />
 
-      {preview && <p className={styles.preview}>{preview}</p>}
+      {preview && (
+        <p className={styles.preview} title={preview}>
+          {preview}
+        </p>
+      )}
 
       <Meta record={record} />
     </article>

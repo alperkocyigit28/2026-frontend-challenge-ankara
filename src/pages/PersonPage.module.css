@@ -7,6 +7,12 @@
 }
 .name {
   font-size: 28px;
+  word-break: break-word;
+}
+@media (max-width: 768px) {
+  .name {
+    font-size: 22px;
+  }
 }
 .score {
   font-size: 12px;
@@ -26,6 +32,11 @@
   margin-bottom: 16px;
   color: var(--text-soft);
   font-size: 14px;
+  text-decoration: none;
+}
+.back:hover {
+  color: var(--accent);
+  text-decoration: none;
 }
 
 .summary {
