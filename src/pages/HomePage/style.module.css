@@ -84,6 +84,52 @@
   gap: 12px;
 }
 
+.pagination {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 18px;
+}
+
+.pageBtn {
+  appearance: none;
+  border: 1px solid var(--border);
+  background: var(--bg-elev);
+  color: var(--text-h);
+  border-radius: 999px;
+  padding: 8px 14px;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.pageBtn:hover:not(:disabled) {
+  border-color: var(--accent-border);
+  color: var(--accent);
+}
+
+.pageBtn:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
+.pageLabel {
+  font-size: 13px;
+  color: var(--text-soft);
+  min-width: 96px;
+  text-align: center;
+}
+
+@media (max-width: 560px) {
+  .pagination {
+    justify-content: space-between;
+  }
+
+  .pageBtn {
+    padding: 8px 12px;
+  }
+}
+
 .empty {
   padding: 32px;
   text-align: center;

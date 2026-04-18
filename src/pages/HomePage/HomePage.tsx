@@ -1,4 +1,4 @@
-import { useMemo } from 'react'
+import { useEffect, useMemo } from 'react'
 import { SOURCES } from '../../api/forms'
 import RecordCard from '../../components/RecordCard'
 import SearchInput from '../../components/SearchInput'
@@ -16,12 +16,15 @@ import { filterRecords } from '../../lib/search'
 import type { Source } from '../../types/records'
 import styles from './style.module.css'
 
+const PAGE_SIZE = 9
+
 export default function HomePage() {
   const { locale, copy } = useI18n()
   const { bySource, records, isLoading, isError, errors, refetch } =
     useAllRecords()
   const [query, setQuery] = useUrlQuery('q')
   const [sourceList, setSourceList] = useUrlList('source')
+  const [pageParam, setPageParam] = useUrlQuery('page')
 
   const activeSources = useMemo(
     () => sourceList.filter((s): s is Source => SOURCES.includes(s as Source)),
@@ -36,6 +39,23 @@ export default function HomePage() {
   const people = useMemo(() => buildPeople(records), [records])
 
   const hasFilters = Boolean(query) || activeSources.length > 0
+  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE))
+  const requestedPage = Number.parseInt(pageParam, 10)
+  const currentPage =
+    Number.isFinite(requestedPage) && requestedPage > 0
+      ? Math.min(requestedPage, totalPages)
+      : 1
+  const pagedRecords = useMemo(() => {
+    const start = (currentPage - 1) * PAGE_SIZE
+    return filtered.slice(start, start + PAGE_SIZE)
+  }, [filtered, currentPage])
+
+  useEffect(() => {
+    const normalized = currentPage <= 1 ? '' : String(currentPage)
+    if (pageParam !== normalized) {
+      setPageParam(normalized)
+    }
+  }, [currentPage, pageParam, setPageParam])
 
   return (
     <>
@@ -103,11 +123,36 @@ export default function HomePage() {
           hint={hasFilters ? copy.home.noMatchHint : copy.home.emptyHint}
         />
       ) : (
-        <section className={styles.grid}>
-          {(hasFilters ? filtered : filtered.slice(0, 12)).map((r) => (
-            <RecordCard key={`${r.source}-${r.id}`} record={r} />
-          ))}
-        </section>
+        <>
+          <section className={styles.grid}>
+            {pagedRecords.map((r) => (
+              <RecordCard key={`${r.source}-${r.id}`} record={r} />
+            ))}
+          </section>
+          {totalPages > 1 && (
+            <nav className={styles.pagination} aria-label={copy.home.pageLabel(currentPage, totalPages)}>
+              <button
+                type="button"
+                className={styles.pageBtn}
+                onClick={() => setPageParam(String(currentPage - 1))}
+                disabled={currentPage === 1}
+              >
+                {copy.home.previousPage}
+              </button>
+              <span className={styles.pageLabel}>
+                {copy.home.pageLabel(currentPage, totalPages)}
+              </span>
+              <button
+                type="button"
+                className={styles.pageBtn}
+                onClick={() => setPageParam(String(currentPage + 1))}
+                disabled={currentPage === totalPages}
+              >
+                {copy.home.nextPage}
+              </button>
+            </nav>
+          )}
+        </>
       )}
     </>
   )

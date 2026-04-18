@@ -95,6 +95,9 @@ const COPY = {
       emptyHint: 'Submissions will appear here once they arrive.',
       noMatchTitle: 'No matching records',
       noMatchHint: 'Try clearing the search or adjusting the source filters.',
+      pageLabel: (page: number, total: number) => `Page ${page} of ${total}`,
+      previousPage: 'Previous',
+      nextPage: 'Next',
     },
     people: {
       title: 'People',
@@ -316,6 +319,9 @@ const COPY = {
       emptyHint: 'Başvurular geldikçe burada görünecek.',
       noMatchTitle: 'Eşleşen kayıt yok',
       noMatchHint: 'Aramayı temizlemeyi veya kaynak filtrelerini değiştirmeyi deneyin.',
+      pageLabel: (page: number, total: number) => `Sayfa ${page} / ${total}`,
+      previousPage: 'Önceki',
+      nextPage: 'Sonraki',
     },
     people: {
       title: 'Kişiler',
