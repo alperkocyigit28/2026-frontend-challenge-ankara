@@ -1,11 +1,17 @@
-import { NavLink, Link, Outlet } from 'react-router-dom'
+import { useEffect, useState } from 'react'
+import { NavLink, Link, useLocation, useOutlet } from 'react-router-dom'
 import clsx from 'clsx'
 import { useI18n } from '../../i18n'
 import type { Locale } from '../../lib/copy'
 import styles from './style.module.css'
 
 export default function Layout() {
+  const location = useLocation()
+  const outlet = useOutlet()
   const { locale, setLocale, copy } = useI18n()
+  const [displayPathname, setDisplayPathname] = useState(location.pathname)
+  const [displayOutlet, setDisplayOutlet] = useState(outlet)
+  const [isExiting, setIsExiting] = useState(false)
   const nav = [
     { to: '/', label: copy.nav.overview, end: true },
     { to: '/people', label: copy.nav.people },
@@ -14,6 +20,22 @@ export default function Layout() {
     { to: '/map', label: copy.nav.map },
     { to: '/board', label: copy.nav.board },
   ]
+
+  useEffect(() => {
+    if (location.pathname === displayPathname) {
+      setDisplayOutlet(outlet)
+      return
+    }
+
+    setIsExiting(true)
+    const timeoutId = window.setTimeout(() => {
+      setDisplayPathname(location.pathname)
+      setDisplayOutlet(outlet)
+      setIsExiting(false)
+    }, 120)
+
+    return () => window.clearTimeout(timeoutId)
+  }, [location.pathname, outlet, displayPathname])
 
   return (
     <div className={styles.shell}>
@@ -53,7 +75,14 @@ export default function Layout() {
         </div>
       </header>
       <main className={styles.main}>
-        <Outlet />
+        <div
+          className={clsx(
+            styles.pageTransition,
+            isExiting ? styles.pageExit : styles.pageEnter,
+          )}
+        >
+          {displayOutlet}
+        </div>
       </main>
     </div>
   )

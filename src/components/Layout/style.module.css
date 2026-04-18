@@ -106,6 +106,27 @@
   width: 100%;
 }
 
+.pageTransition {
+  min-height: 100%;
+  will-change: opacity, transform, filter;
+  transition:
+    opacity 120ms ease,
+    transform 160ms ease,
+    filter 160ms ease;
+}
+
+.pageEnter {
+  opacity: 1;
+  transform: translateY(0);
+  filter: blur(0);
+}
+
+.pageExit {
+  opacity: 0;
+  transform: translateY(10px);
+  filter: blur(3px);
+}
+
 @media (max-width: 768px) {
   .header {
     padding: 12px 14px;
@@ -133,5 +154,11 @@
   }
   .navLink {
     padding: 5px 7px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pageTransition {
+    transition: none;
   }
 }
