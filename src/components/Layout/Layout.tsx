@@ -6,6 +6,8 @@ const NAV = [
   { to: '/', label: 'Overview', end: true },
   { to: '/people', label: 'People' },
   { to: '/locations', label: 'Locations' },
+  { to: '/timeline', label: 'Timeline' },
+  { to: '/map', label: 'Map' },
 ]
 
 export default function Layout() {
