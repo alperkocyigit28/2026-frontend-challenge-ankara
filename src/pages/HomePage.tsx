@@ -5,8 +5,11 @@ import SearchInput from '../components/SearchInput'
 import SourceFilter from '../components/SourceFilter'
 import { SkeletonGrid } from '../components/Skeleton'
 import { EmptyState, ErrorState } from '../components/StateView'
+import SuspicionPanel from '../components/SuspicionPanel'
+import PodoFeed from '../components/PodoFeed'
 import { useAllRecords } from '../hooks/useAllRecords'
 import { useUrlList, useUrlQuery } from '../hooks/useUrlQuery'
+import { buildPeople } from '../lib/derive'
 import { filterRecords } from '../lib/search'
 import { SOURCE_LABEL, type Source } from '../types/records'
 import styles from './HomePage.module.css'
@@ -26,6 +29,8 @@ export default function HomePage() {
     () => filterRecords(records, query, activeSources),
     [records, query, activeSources],
   )
+
+  const people = useMemo(() => buildPeople(records), [records])
 
   const hasFilters = Boolean(query) || activeSources.length > 0
 
@@ -54,6 +59,13 @@ export default function HomePage() {
           </div>
         ))}
       </section>
+
+      {!isLoading && records.length > 0 && (
+        <section className={styles.panels}>
+          <PodoFeed records={records} />
+          <SuspicionPanel people={people} records={records} />
+        </section>
+      )}
 
       <div className={styles.sectionHead}>
         <h2 className={styles.sectionTitle}>

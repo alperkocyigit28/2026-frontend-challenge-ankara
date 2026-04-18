@@ -100,15 +100,35 @@ function lastSeenWith(name: string, records: InvestigationRecord[]): string[] {
   return [...seen]
 }
 
-export function scoreSuspicion(
+export interface SuspicionReason {
+  label: string
+  points: number
+  recordId: string
+  source: InvestigationRecord['source']
+}
+
+export interface SuspicionBreakdown {
+  total: number
+  reasons: SuspicionReason[]
+}
+
+export function suspicionBreakdown(
   name: string,
   records: InvestigationRecord[],
-): number {
+): SuspicionBreakdown {
   const k = key(name)
-  let score = 0
+  const reasons: SuspicionReason[] = []
+
   for (const r of records) {
     if (r.source === 'tip' && key(r.suspect) === k) {
-      score += r.confidence === 'high' ? 3 : r.confidence === 'medium' ? 2 : 1
+      const points =
+        r.confidence === 'high' ? 3 : r.confidence === 'medium' ? 2 : 1
+      reasons.push({
+        label: `${r.confidence}-confidence anonymous tip`,
+        points,
+        recordId: r.id,
+        source: r.source,
+      })
     }
     if (
       r.source === 'sighting' &&
@@ -116,13 +136,43 @@ export function scoreSuspicion(
       (key(r.person) === k || key(r.seenWith) === k) &&
       k !== 'podo'
     ) {
-      score += 1
+      reasons.push({
+        label: `sighted with Podo at ${r.location || 'unknown place'}`,
+        points: 1,
+        recordId: r.id,
+        source: r.source,
+      })
     }
     if (r.source === 'message' && key(r.sender) === k && r.urgency === 'high') {
-      score += 1
+      reasons.push({
+        label: `sent high-urgency message to ${r.recipient}`,
+        points: 1,
+        recordId: r.id,
+        source: r.source,
+      })
     }
   }
-  return score
+
+  return {
+    total: reasons.reduce((sum, r) => sum + r.points, 0),
+    reasons,
+  }
+}
+
+export function scoreSuspicion(
+  name: string,
+  records: InvestigationRecord[],
+): number {
+  return suspicionBreakdown(name, records).total
+}
+
+export function podoActivity(
+  records: InvestigationRecord[],
+  limit = 5,
+): InvestigationRecord[] {
+  return records
+    .filter((r) => recordPeople(r).some((p) => key(p) === 'podo'))
+    .slice(0, limit)
 }
 
 export function buildLocations(records: InvestigationRecord[]): Location[] {

@@ -5,7 +5,7 @@ import PersonChip from '../components/PersonChip'
 import { SkeletonGrid } from '../components/Skeleton'
 import { EmptyState, ErrorState } from '../components/StateView'
 import { useAllRecords } from '../hooks/useAllRecords'
-import { buildPeople } from '../lib/derive'
+import { buildPeople, suspicionBreakdown } from '../lib/derive'
 import { formatDateTime } from '../lib/format'
 import styles from './PersonPage.module.css'
 
@@ -97,6 +97,10 @@ export default function PersonPage() {
         </div>
       </section>
 
+      {person.suspicionScore > 0 && (
+        <SuspicionBreakdown name={person.name} records={records} />
+      )}
+
       <h2 className={styles.sectionTitle}>All records</h2>
       <section className={styles.grid}>
         {person.records.map((r) => (
@@ -104,5 +108,31 @@ export default function PersonPage() {
         ))}
       </section>
     </>
+  )
+}
+
+function SuspicionBreakdown({
+  name,
+  records,
+}: {
+  name: string
+  records: ReturnType<typeof useAllRecords>['records']
+}) {
+  const { total, reasons } = suspicionBreakdown(name, records)
+  return (
+    <section className={styles.breakdown} aria-label="Suspicion score breakdown">
+      <div className={styles.breakdownHead}>
+        <span className={styles.breakdownTitle}>Why suspicion is high</span>
+        <span className={styles.breakdownTotal}>total {total}</span>
+      </div>
+      <ul className={styles.breakdownList}>
+        {reasons.map((r, i) => (
+          <li key={`${r.recordId}-${i}`} className={styles.breakdownRow}>
+            <span className={styles.breakdownPoints}>+{r.points}</span>
+            <span className={styles.breakdownLabel}>{r.label}</span>
+          </li>
+        ))}
+      </ul>
+    </section>
   )
 }

@@ -10,7 +10,19 @@
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
   gap: 12px;
+  margin-bottom: 24px;
+}
+
+.panels {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
   margin-bottom: 32px;
+}
+@media (max-width: 768px) {
+  .panels {
+    grid-template-columns: 1fr;
+  }
 }
 
 .stat {
