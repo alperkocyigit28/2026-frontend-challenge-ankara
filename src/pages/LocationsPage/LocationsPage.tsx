@@ -7,6 +7,7 @@ import { useAllRecords } from '../../hooks/useAllRecords'
 import { useUrlQuery } from '../../hooks/useUrlQuery'
 import { useI18n } from '../../i18n'
 import { buildLocations } from '../../lib/derive'
+import { matchesFuzzyText } from '../../lib/search'
 import styles from './style.module.css'
 
 export default function LocationsPage() {
@@ -16,9 +17,8 @@ export default function LocationsPage() {
 
   const locations = useMemo(() => buildLocations(records), [records])
   const filtered = useMemo(() => {
-    const q = query.trim().toLowerCase()
-    if (!q) return locations
-    return locations.filter((l) => l.name.toLowerCase().includes(q))
+    if (!query.trim()) return locations
+    return locations.filter((l) => matchesFuzzyText(l.name, query))
   }, [locations, query])
 
   return (

@@ -7,7 +7,7 @@ import { useAllRecords } from '../../hooks/useAllRecords'
 import { useUrlQuery } from '../../hooks/useUrlQuery'
 import { useI18n } from '../../i18n'
 import { buildPeople } from '../../lib/derive'
-import { personKey } from '../../lib/person'
+import { matchesFuzzyText } from '../../lib/search'
 import styles from './style.module.css'
 
 export default function PeoplePage() {
@@ -17,9 +17,8 @@ export default function PeoplePage() {
 
   const people = useMemo(() => buildPeople(records), [records])
   const filtered = useMemo(() => {
-    const q = personKey(query)
-    if (!q) return people
-    return people.filter((p) => personKey(p.name).includes(q))
+    if (!query.trim()) return people
+    return people.filter((p) => matchesFuzzyText(p.name, query))
   }, [people, query])
 
   return (
