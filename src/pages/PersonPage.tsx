@@ -2,6 +2,8 @@ import { useMemo } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import RecordCard from '../components/RecordCard'
 import PersonChip from '../components/PersonChip'
+import { SkeletonGrid } from '../components/Skeleton'
+import { EmptyState, ErrorState } from '../components/StateView'
 import { useAllRecords } from '../hooks/useAllRecords'
 import { buildPeople } from '../lib/derive'
 import { formatDateTime } from '../lib/format'
@@ -10,7 +12,7 @@ import styles from './PersonPage.module.css'
 export default function PersonPage() {
   const { name: rawName } = useParams<{ name: string }>()
   const decoded = rawName ? decodeURIComponent(rawName) : ''
-  const { records, isLoading } = useAllRecords()
+  const { records, isLoading, isError, errors, refetch } = useAllRecords()
 
   const people = useMemo(() => buildPeople(records), [records])
   const person = useMemo(
@@ -19,7 +21,25 @@ export default function PersonPage() {
   )
 
   if (isLoading) {
-    return <p style={{ color: 'var(--text-soft)' }}>Loading…</p>
+    return (
+      <>
+        <Link to="/people" className={styles.back}>
+          ← Back to people
+        </Link>
+        <SkeletonGrid count={4} />
+      </>
+    )
+  }
+
+  if (isError && people.length === 0) {
+    return (
+      <>
+        <Link to="/people" className={styles.back}>
+          ← Back to people
+        </Link>
+        <ErrorState errors={errors} onRetry={refetch} />
+      </>
+    )
   }
 
   if (!person) {
@@ -28,9 +48,10 @@ export default function PersonPage() {
         <Link to="/people" className={styles.back}>
           ← Back to people
         </Link>
-        <div className={styles.empty}>
-          No person named <strong>{decoded}</strong> found.
-        </div>
+        <EmptyState
+          title={`No person named "${decoded}"`}
+          hint="This person may have been removed or the URL is wrong."
+        />
       </>
     )
   }

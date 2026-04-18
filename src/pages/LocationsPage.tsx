@@ -1,13 +1,15 @@
 import { useMemo } from 'react'
 import { Link } from 'react-router-dom'
 import SearchInput from '../components/SearchInput'
+import { SkeletonGrid } from '../components/Skeleton'
+import { EmptyState, ErrorState } from '../components/StateView'
 import { useAllRecords } from '../hooks/useAllRecords'
 import { useUrlQuery } from '../hooks/useUrlQuery'
 import { buildLocations } from '../lib/derive'
 import styles from './LocationsPage.module.css'
 
 export default function LocationsPage() {
-  const { records, isLoading } = useAllRecords()
+  const { records, isLoading, isError, errors, refetch } = useAllRecords()
   const [query, setQuery] = useUrlQuery('q')
 
   const locations = useMemo(() => buildLocations(records), [records])
@@ -38,30 +40,40 @@ export default function LocationsPage() {
         />
       </div>
 
-      <section className={styles.grid}>
-        {filtered.map((loc) => (
-          <Link
-            key={loc.name}
-            to={`/locations/${encodeURIComponent(loc.name)}`}
-            className={styles.card}
-          >
-            <div className={styles.name}>{loc.name}</div>
-            <div className={styles.meta}>
-              {loc.records.length} event{loc.records.length === 1 ? '' : 's'}
-            </div>
-            {loc.coords && (
-              <div className={styles.coords}>
-                {loc.coords[0].toFixed(4)}, {loc.coords[1].toFixed(4)}
+      {isError && locations.length === 0 ? (
+        <ErrorState errors={errors} onRetry={refetch} />
+      ) : isLoading ? (
+        <SkeletonGrid count={6} />
+      ) : filtered.length === 0 ? (
+        <EmptyState
+          title={query ? `No locations match "${query}"` : 'No locations yet'}
+          hint={
+            query
+              ? 'Try a shorter or different place name.'
+              : 'Locations are derived from submitted records.'
+          }
+        />
+      ) : (
+        <section className={styles.grid}>
+          {filtered.map((loc) => (
+            <Link
+              key={loc.name}
+              to={`/locations/${encodeURIComponent(loc.name)}`}
+              className={styles.card}
+            >
+              <div className={styles.name}>{loc.name}</div>
+              <div className={styles.meta}>
+                {loc.records.length} event{loc.records.length === 1 ? '' : 's'}
               </div>
-            )}
-          </Link>
-        ))}
-        {!isLoading && filtered.length === 0 && (
-          <p style={{ color: 'var(--text-soft)' }}>
-            {query ? `No locations match "${query}".` : 'No locations yet.'}
-          </p>
-        )}
-      </section>
+              {loc.coords && (
+                <div className={styles.coords}>
+                  {loc.coords[0].toFixed(4)}, {loc.coords[1].toFixed(4)}
+                </div>
+              )}
+            </Link>
+          ))}
+        </section>
+      )}
     </>
   )
 }

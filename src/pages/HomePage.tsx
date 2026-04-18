@@ -3,6 +3,8 @@ import { SOURCES } from '../api/forms'
 import RecordCard from '../components/RecordCard'
 import SearchInput from '../components/SearchInput'
 import SourceFilter from '../components/SourceFilter'
+import { SkeletonGrid } from '../components/Skeleton'
+import { EmptyState, ErrorState } from '../components/StateView'
 import { useAllRecords } from '../hooks/useAllRecords'
 import { useUrlList, useUrlQuery } from '../hooks/useUrlQuery'
 import { filterRecords } from '../lib/search'
@@ -10,7 +12,8 @@ import { SOURCE_LABEL, type Source } from '../types/records'
 import styles from './HomePage.module.css'
 
 export default function HomePage() {
-  const { bySource, records, isLoading, isError, errors } = useAllRecords()
+  const { bySource, records, isLoading, isError, errors, refetch } =
+    useAllRecords()
   const [query, setQuery] = useUrlQuery('q')
   const [sourceList, setSourceList] = useUrlList('source')
 
@@ -35,14 +38,9 @@ export default function HomePage() {
         </p>
       </header>
 
-      {isError && (
-        <div className={styles.errorBox}>
-          <strong>Failed to load some sources.</strong>
-          <ul>
-            {errors.map((e, i) => (
-              <li key={i}>{e.message}</li>
-            ))}
-          </ul>
+      {isError && records.length === 0 && (
+        <div style={{ marginBottom: 24 }}>
+          <ErrorState errors={errors} onRetry={refetch} />
         </div>
       )}
 
@@ -84,12 +82,17 @@ export default function HomePage() {
         />
       </div>
 
-      {!isLoading && filtered.length === 0 ? (
-        <div className={styles.empty}>
-          {hasFilters
-            ? 'No records match the current filters.'
-            : 'No records yet.'}
-        </div>
+      {isLoading ? (
+        <SkeletonGrid count={6} />
+      ) : filtered.length === 0 ? (
+        <EmptyState
+          title={hasFilters ? 'No matching records' : 'No records yet'}
+          hint={
+            hasFilters
+              ? 'Try clearing the search or adjusting the source filters.'
+              : 'Submissions will appear here once they arrive.'
+          }
+        />
       ) : (
         <section className={styles.grid}>
           {(hasFilters ? filtered : filtered.slice(0, 12)).map((r) => (

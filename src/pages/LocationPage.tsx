@@ -1,6 +1,8 @@
 import { useMemo } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import RecordCard from '../components/RecordCard'
+import { SkeletonGrid } from '../components/Skeleton'
+import { EmptyState, ErrorState } from '../components/StateView'
 import { useAllRecords } from '../hooks/useAllRecords'
 import { buildLocations } from '../lib/derive'
 import styles from './PersonPage.module.css'
@@ -8,7 +10,7 @@ import styles from './PersonPage.module.css'
 export default function LocationPage() {
   const { name: rawName } = useParams<{ name: string }>()
   const decoded = rawName ? decodeURIComponent(rawName) : ''
-  const { records, isLoading } = useAllRecords()
+  const { records, isLoading, isError, errors, refetch } = useAllRecords()
 
   const locations = useMemo(() => buildLocations(records), [records])
   const location = useMemo(
@@ -17,7 +19,25 @@ export default function LocationPage() {
   )
 
   if (isLoading) {
-    return <p style={{ color: 'var(--text-soft)' }}>Loading…</p>
+    return (
+      <>
+        <Link to="/locations" className={styles.back}>
+          ← Back to locations
+        </Link>
+        <SkeletonGrid count={4} />
+      </>
+    )
+  }
+
+  if (isError && locations.length === 0) {
+    return (
+      <>
+        <Link to="/locations" className={styles.back}>
+          ← Back to locations
+        </Link>
+        <ErrorState errors={errors} onRetry={refetch} />
+      </>
+    )
   }
 
   if (!location) {
@@ -26,9 +46,10 @@ export default function LocationPage() {
         <Link to="/locations" className={styles.back}>
           ← Back to locations
         </Link>
-        <div className={styles.empty}>
-          No location <strong>{decoded}</strong> found.
-        </div>
+        <EmptyState
+          title={`No location "${decoded}"`}
+          hint="This place may have been removed or the URL is wrong."
+        />
       </>
     )
   }
