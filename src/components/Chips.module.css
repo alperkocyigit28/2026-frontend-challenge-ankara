@@ -1,0 +1,53 @@
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 1px 8px;
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 1.6;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: var(--bg-elev);
+  color: var(--text-h);
+  text-decoration: none;
+  white-space: nowrap;
+  transition: border-color 120ms, background 120ms, color 120ms;
+}
+.chip:hover {
+  border-color: var(--accent-border);
+  background: var(--accent-bg);
+  color: var(--accent);
+  text-decoration: none;
+}
+
+.person {
+  border-color: var(--border);
+}
+.person:hover {
+  color: var(--accent);
+}
+
+.podo {
+  background: var(--accent-bg);
+  border-color: var(--accent-border);
+  color: var(--accent);
+}
+
+.location {
+  color: var(--text);
+}
+.location::before {
+  content: '';
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  border-radius: 999px;
+  background: currentColor;
+  opacity: 0.5;
+}
+
+.plain {
+  color: var(--text-soft);
+  font-size: 13px;
+}

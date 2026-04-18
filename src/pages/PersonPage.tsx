@@ -1,6 +1,7 @@
 import { useMemo } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import RecordCard from '../components/RecordCard'
+import PersonChip from '../components/PersonChip'
 import { useAllRecords } from '../hooks/useAllRecords'
 import { buildPeople } from '../lib/derive'
 import { formatDateTime } from '../lib/format'
@@ -62,9 +63,15 @@ export default function PersonPage() {
         <div className={styles.summaryCard}>
           <div className={styles.summaryLabel}>Last seen with</div>
           <div className={styles.summaryValue}>
-            {person.lastSeenWith.length > 0
-              ? person.lastSeenWith.join(', ')
-              : '—'}
+            {person.lastSeenWith.length > 0 ? (
+              <span style={{ display: 'inline-flex', flexWrap: 'wrap', gap: '6px' }}>
+                {person.lastSeenWith.map((n) => (
+                  <PersonChip key={n} name={n} />
+                ))}
+              </span>
+            ) : (
+              '—'
+            )}
           </div>
         </div>
       </section>
