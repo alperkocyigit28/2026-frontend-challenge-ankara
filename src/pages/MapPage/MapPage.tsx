@@ -1,14 +1,17 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { useEffect, useMemo, useRef } from 'react'
+import { useNavigate } from 'react-router-dom'
 import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
+import clsx from 'clsx'
+import SearchInput from '../../components/SearchInput'
 import SourceFilter from '../../components/SourceFilter'
 import { SkeletonCard } from '../../components/Skeleton'
 import { EmptyState, ErrorState } from '../../components/StateView'
 import { useAllRecords } from '../../hooks/useAllRecords'
-import { useUrlList } from '../../hooks/useUrlQuery'
-import { recordPeople, recordPreview, recordHeadline } from '../../lib/derive'
-import { formatDateTime } from '../../lib/format'
+import { useUrlList, useUrlQuery } from '../../hooks/useUrlQuery'
+import { recordPreview, recordHeadline } from '../../lib/derive'
+import { filterRecords } from '../../lib/search'
+import { formatRelative } from '../../lib/format'
 import {
   SOURCE_LABEL,
   type InvestigationRecord,
@@ -26,17 +29,84 @@ const SOURCE_COLOR: Record<Source, string> = {
   tip: '#c9393b',
 }
 
-function makeIcon(source: Source, isPodo: boolean) {
+const recordKey = (r: InvestigationRecord) => `${r.source}-${r.id}`
+const coordKey = (c: [number, number]) =>
+  `${c[0].toFixed(5)},${c[1].toFixed(5)}`
+
+const escapeHtml = (s: string) =>
+  s
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;')
+
+function popupHtml(r: InvestigationRecord, others: InvestigationRecord[]) {
+  const when = r.at ? formatRelative(r.at) : ''
+  const headline = escapeHtml(recordHeadline(r))
+  const preview = escapeHtml(recordPreview(r))
+  const location = r.location ? escapeHtml(r.location) : ''
+  const othersBlock =
+    others.length > 0
+      ? `
+    <div class="${styles.popupOthers}">
+      <div class="${styles.popupOthersLabel}">
+        ${others.length} other event${others.length === 1 ? '' : 's'} at this spot
+      </div>
+      <ul class="${styles.popupOthersList}">
+        ${others
+          .map(
+            (o) => `
+          <li>
+            <button type="button" class="${styles.popupOtherBtn}" data-rkey="${escapeHtml(
+              recordKey(o),
+            )}">
+              <span class="${styles.popupOtherDot}" style="background:${SOURCE_COLOR[o.source]}"></span>
+              <span class="${styles.popupOtherLabel}">${escapeHtml(SOURCE_LABEL[o.source])}</span>
+              <span class="${styles.popupOtherText}">${escapeHtml(recordHeadline(o))}</span>
+            </button>
+          </li>
+        `,
+          )
+          .join('')}
+      </ul>
+    </div>
+  `
+      : ''
+  const locationLink = r.location
+    ? `<button type="button" class="${styles.popupLocLink}" data-location="${escapeHtml(
+        r.location,
+      )}">View ${location} →</button>`
+    : ''
+  return `
+    <div class="${styles.popup}">
+      <div class="${styles.popupHead}">
+        <span class="${styles.popupBadge}" style="background:${SOURCE_COLOR[r.source]}">
+          ${escapeHtml(SOURCE_LABEL[r.source])}
+        </span>
+        <span class="${styles.popupTime}">${escapeHtml(when)}</span>
+      </div>
+      <div class="${styles.popupTitle}">${headline}</div>
+      ${preview ? `<p class="${styles.popupText}">${preview}</p>` : ''}
+      ${locationLink}
+      ${othersBlock}
+    </div>
+  `
+}
+
+function makeIcon(source: Source, isSelected: boolean) {
   const color = SOURCE_COLOR[source]
-  const size = isPodo ? 22 : 16
-  const ring = isPodo ? 'box-shadow:0 0 0 4px rgba(170,59,255,0.35);' : ''
+  const size = isSelected ? 26 : 16
+  const shadow = isSelected
+    ? 'box-shadow: 0 0 0 3px #ffffff, 0 0 0 6px #aa3bff, 0 6px 16px rgba(170,59,255,0.45);'
+    : ''
   const html = `<span style="
     display:block;
     width:${size}px;height:${size}px;
     background:${color};
     border:2px solid #fff;
     border-radius:999px;
-    ${ring}
+    ${shadow}
   "></span>`
   return L.divIcon({
     html,
@@ -47,44 +117,33 @@ function makeIcon(source: Source, isPodo: boolean) {
   })
 }
 
-function popupHtml(r: InvestigationRecord): string {
-  const when = r.at ? formatDateTime(r.at) : 'unknown time'
-  const preview = recordPreview(r).replace(/</g, '&lt;')
-  const headline = recordHeadline(r).replace(/</g, '&lt;')
-  const location = (r.location || 'unknown location').replace(/</g, '&lt;')
-  return `
-    <div class="${styles.popup}">
-      <div class="${styles.popupHead}">
-        <span class="${styles.popupBadge}" style="background:${SOURCE_COLOR[r.source]}">
-          ${SOURCE_LABEL[r.source]}
-        </span>
-        <span class="${styles.popupTime}">${when}</span>
-      </div>
-      <div class="${styles.popupTitle}">${headline}</div>
-      <p class="${styles.popupText}">${preview}</p>
-      <div class="${styles.popupMeta}">at ${location}</div>
-    </div>
-  `
-}
-
 export default function MapPage() {
+  const navigate = useNavigate()
   const { records, isLoading, isError, errors, refetch } = useAllRecords()
   const [rawSources, setSources] = useUrlList('source')
   const sources = rawSources as Source[]
-  const [selected, setSelected] = useState<InvestigationRecord | null>(null)
+  const [query, setQuery] = useUrlQuery('q')
+  const [selectedParam, setSelectedParam] = useUrlQuery('selected')
+  const selectedKey = selectedParam || null
+  const setSelectedKey = (next: string | null) => setSelectedParam(next ?? '')
 
   const containerRef = useRef<HTMLDivElement | null>(null)
   const mapRef = useRef<L.Map | null>(null)
   const layerRef = useRef<L.LayerGroup | null>(null)
+  const markersRef = useRef<Map<string, L.Marker>>(new Map())
+  const listRef = useRef<HTMLUListElement | null>(null)
+  const rowRefs = useRef<Map<string, HTMLLIElement>>(new Map())
+  const userInteractedRef = useRef(false)
 
   const mapped = useMemo(
     () =>
-      records.filter(
-        (r) =>
-          r.coords &&
-          (sources.length === 0 || sources.includes(r.source)),
-      ),
-    [records, sources],
+      filterRecords(records, query, sources).filter((r) => r.coords),
+    [records, query, sources],
+  )
+
+  const selected = useMemo(
+    () => mapped.find((r) => recordKey(r) === selectedKey) ?? null,
+    [mapped, selectedKey],
   )
 
   useEffect(() => {
@@ -105,29 +164,115 @@ export default function MapPage() {
       map.remove()
       mapRef.current = null
       layerRef.current = null
+      markersRef.current.clear()
     }
   }, [])
+
+  const coordGroups = useMemo(() => {
+    const m = new Map<string, InvestigationRecord[]>()
+    for (const r of mapped) {
+      if (!r.coords) continue
+      const k = coordKey(r.coords)
+      const list = m.get(k)
+      if (list) list.push(r)
+      else m.set(k, [r])
+    }
+    return m
+  }, [mapped])
 
   useEffect(() => {
     const map = mapRef.current
     const layer = layerRef.current
     if (!map || !layer) return
     layer.clearLayers()
+    markersRef.current.clear()
+
     const markers: L.Marker[] = []
     for (const r of mapped) {
       if (!r.coords) continue
-      const isPodo = recordPeople(r).some((p) => p.trim().toLowerCase() === 'podo')
-      const marker = L.marker(r.coords, { icon: makeIcon(r.source, isPodo) })
-      marker.bindPopup(popupHtml(r), { maxWidth: 280 })
-      marker.on('click', () => setSelected(r))
+      const key = recordKey(r)
+      const isSelected = key === selectedKey
+      const siblings =
+        coordGroups.get(coordKey(r.coords))?.filter(
+          (o) => recordKey(o) !== key,
+        ) ?? []
+      const marker = L.marker(r.coords, {
+        icon: makeIcon(r.source, isSelected),
+        zIndexOffset: isSelected ? 1000 : 0,
+      })
+      marker.bindPopup(() => popupHtml(r, siblings), {
+        maxWidth: 280,
+        className: styles.leafletPopup,
+      })
+      marker.on('click', () => {
+        userInteractedRef.current = true
+        setSelectedKey(key)
+      })
+      marker.on('popupopen', (e) => {
+        const el = e.popup.getElement()
+        if (!el) return
+        el.querySelectorAll<HTMLButtonElement>('[data-rkey]').forEach((btn) => {
+          btn.addEventListener('click', (ev) => {
+            ev.preventDefault()
+            ev.stopPropagation()
+            const next = btn.getAttribute('data-rkey')
+            if (next) {
+              userInteractedRef.current = true
+              setSelectedKey(next)
+            }
+          })
+        })
+        el.querySelectorAll<HTMLButtonElement>('[data-location]').forEach(
+          (btn) => {
+            btn.addEventListener('click', (ev) => {
+              ev.preventDefault()
+              ev.stopPropagation()
+              const loc = btn.getAttribute('data-location')
+              if (loc) navigate(`/locations/${encodeURIComponent(loc)}`)
+            })
+          },
+        )
+      })
       marker.addTo(layer)
       markers.push(marker)
+      markersRef.current.set(key, marker)
     }
-    if (markers.length > 0) {
+
+    if (!userInteractedRef.current && markers.length > 0) {
       const group = L.featureGroup(markers)
       map.fitBounds(group.getBounds().pad(0.15), { animate: false })
     }
-  }, [mapped])
+  }, [mapped, coordGroups, selectedKey])
+
+  useEffect(() => {
+    if (!selectedKey) return
+    if (!selected) {
+      setSelectedKey(null)
+      return
+    }
+    const map = mapRef.current
+    const marker = markersRef.current.get(selectedKey)
+    if (map && selected.coords) {
+      map.flyTo(selected.coords, Math.max(map.getZoom(), 14), {
+        duration: 0.45,
+      })
+    }
+    if (marker) {
+      setTimeout(() => marker.openPopup?.(), 300)
+    }
+    const row = rowRefs.current.get(selectedKey)
+    if (row) row.scrollIntoView({ block: 'nearest', behavior: 'smooth' })
+  }, [selectedKey, selected])
+
+  const registerRow = (key: string) => (el: HTMLLIElement | null) => {
+    if (el) rowRefs.current.set(key, el)
+    else rowRefs.current.delete(key)
+  }
+
+  const handleListClick = (r: InvestigationRecord) => {
+    userInteractedRef.current = true
+    setSelectedKey(recordKey(r))
+  }
 
   return (
     <>
@@ -135,11 +280,19 @@ export default function MapPage() {
         <div>
           <h1 className={styles.title}>Map</h1>
           <p className={styles.subtitle}>
-            {mapped.length} event{mapped.length === 1 ? '' : 's'} plotted across Ankara.
-            Podo's sightings are highlighted.
+            {mapped.length} event{mapped.length === 1 ? '' : 's'} plotted across
+            Ankara. Click any pin or list row — the other view follows.
           </p>
         </div>
         <SourceFilter value={sources} onChange={(v) => setSources(v)} />
+      </div>
+
+      <div className={styles.searchRow}>
+        <SearchInput
+          value={query}
+          onChange={setQuery}
+          placeholder="Search by person, location, or text…"
+        />
       </div>
 
       {isLoading ? (
@@ -147,51 +300,94 @@ export default function MapPage() {
       ) : isError && records.length === 0 ? (
         <ErrorState errors={errors} onRetry={refetch} />
       ) : (
-        <div className={styles.mapWrap}>
-          <div ref={containerRef} className={styles.map} />
-          {mapped.length === 0 && (
-            <div className={styles.overlay}>
-              <EmptyState
-                title="No mappable events"
-                hint="No records have coordinates for the current filter."
-              />
-            </div>
-          )}
-          {selected && (
-            <aside className={styles.sidebar}>
-              <button
-                type="button"
-                className={styles.close}
-                onClick={() => setSelected(null)}
-                aria-label="Close details"
-              >
-                ×
-              </button>
-              <div className={styles.sideHead}>
-                <span
-                  className={styles.popupBadge}
-                  style={{ background: SOURCE_COLOR[selected.source] }}
-                >
-                  {SOURCE_LABEL[selected.source]}
-                </span>
-                <time className={styles.popupTime}>
-                  {selected.at ? formatDateTime(selected.at) : ''}
-                </time>
+        <div className={styles.split}>
+          <div className={styles.mapWrap}>
+            <div ref={containerRef} className={styles.map} />
+            {mapped.length === 0 && (
+              <div className={styles.overlay}>
+                <EmptyState
+                  title="No mappable events"
+                  hint="No records have coordinates for the current filter."
+                />
               </div>
-              <h2 className={styles.sideTitle}>{recordHeadline(selected)}</h2>
-              <p className={styles.sideText}>{recordPreview(selected)}</p>
-              {selected.location && (
-                <Link
-                  to={`/locations/${encodeURIComponent(selected.location)}`}
-                  className={styles.sideLink}
+            )}
+          </div>
+
+          <aside className={styles.listPane} aria-label="Mapped records">
+            <header className={styles.listHead}>
+              <span className={styles.listCount}>
+                {mapped.length} result{mapped.length === 1 ? '' : 's'}
+              </span>
+              {selected && (
+                <button
+                  type="button"
+                  className={styles.clear}
+                  onClick={() => setSelectedKey(null)}
                 >
-                  View {selected.location} →
-                </Link>
+                  Clear selection
+                </button>
               )}
-            </aside>
-          )}
+            </header>
+            {mapped.length === 0 ? (
+              <div className={styles.listEmpty}>
+                No events match the current filter.
+              </div>
+            ) : (
+              <ul ref={listRef} className={styles.list}>
+                {mapped.map((r) => {
+                  const key = recordKey(r)
+                  const active = key === selectedKey
+                  return (
+                    <li
+                      key={key}
+                      ref={registerRow(key)}
+                      className={clsx(
+                        styles.listItem,
+                        active && styles.listItemActive,
+                      )}
+                    >
+                      <button
+                        type="button"
+                        className={styles.listBtn}
+                        onClick={() => handleListClick(r)}
+                        aria-pressed={active}
+                      >
+                        <span
+                          className={styles.listDot}
+                          style={{ background: SOURCE_COLOR[r.source] }}
+                          aria-hidden
+                        />
+                        <span className={styles.listBody}>
+                          <span className={styles.listTop}>
+                            <span className={styles.listSource}>
+                              {SOURCE_LABEL[r.source]}
+                            </span>
+                            <span className={styles.listTime}>
+                              {r.at ? formatRelative(r.at) : ''}
+                            </span>
+                          </span>
+                          <span className={styles.listTitle}>
+                            {recordHeadline(r)}
+                          </span>
+                          <span className={styles.listPreview}>
+                            {recordPreview(r)}
+                          </span>
+                          {r.location && (
+                            <span className={styles.listLocation}>
+                              {r.location}
+                            </span>
+                          )}
+                        </span>
+                      </button>
+                    </li>
+                  )
+                })}
+              </ul>
+            )}
+          </aside>
         </div>
       )}
+
     </>
   )
 }

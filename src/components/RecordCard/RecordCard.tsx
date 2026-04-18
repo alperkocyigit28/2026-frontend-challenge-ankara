@@ -1,3 +1,6 @@
+import type { MouseEvent, KeyboardEvent } from 'react'
+import { useNavigate } from 'react-router-dom'
+import clsx from 'clsx'
 import type { InvestigationRecord } from '../../types/records'
 import { recordPreview } from '../../lib/derive'
 import { formatDateTime, formatRelative } from '../../lib/format'
@@ -11,10 +14,37 @@ interface Props {
 }
 
 export default function RecordCard({ record }: Props) {
+  const navigate = useNavigate()
   const preview = recordPreview(record)
+  const mappable = !!record.coords
+
+  const openOnMap = () => {
+    navigate(`/map?selected=${encodeURIComponent(`${record.source}-${record.id}`)}`)
+  }
+
+  const handleClick = (e: MouseEvent<HTMLElement>) => {
+    if (!mappable) return
+    if (e.target instanceof HTMLElement && e.target.closest('a,button')) return
+    openOnMap()
+  }
+
+  const handleKeyDown = (e: KeyboardEvent<HTMLElement>) => {
+    if (!mappable) return
+    if (e.key !== 'Enter' && e.key !== ' ') return
+    if (e.target instanceof HTMLElement && e.target.closest('a,button')) return
+    e.preventDefault()
+    openOnMap()
+  }
 
   return (
-    <article className={styles.card}>
+    <article
+      className={clsx(styles.card, mappable && styles.clickable)}
+      onClick={handleClick}
+      onKeyDown={handleKeyDown}
+      role={mappable ? 'button' : undefined}
+      tabIndex={mappable ? 0 : undefined}
+      aria-label={mappable ? 'Open on map' : undefined}
+    >
       <div className={styles.head}>
         <SourceBadge source={record.source} />
         <span className={styles.time} title={formatDateTime(record.at)}>
@@ -31,6 +61,12 @@ export default function RecordCard({ record }: Props) {
       )}
 
       <Meta record={record} />
+
+      {mappable && (
+        <span className={styles.mapHint} aria-hidden>
+          View on map →
+        </span>
+      )}
     </article>
   )
 }
