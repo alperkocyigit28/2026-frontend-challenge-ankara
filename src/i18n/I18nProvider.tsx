@@ -26,6 +26,8 @@ const I18nContext = createContext<I18nContextValue | null>(null)
 function detectInitialLocale(): Locale {
   const stored = localStorage.getItem(STORAGE_KEY)
   if (stored === 'en' || stored === 'tr') return stored
+  // Fall back to the browser locale on first visit so Turkish users land on
+  // the localized UI without needing to flip the switch manually.
   return navigator.language.toLowerCase().startsWith('tr') ? 'tr' : 'en'
 }
 
@@ -33,6 +35,8 @@ export function I18nProvider({ children }: { children: ReactNode }) {
   const [locale, setLocale] = useState<Locale>(detectInitialLocale)
 
   useEffect(() => {
+    // Persist the choice and keep the document language in sync for browser
+    // affordances like spellcheck and assistive tech.
     localStorage.setItem(STORAGE_KEY, locale)
     document.documentElement.lang = LOCALE_TAG[locale]
   }, [locale])

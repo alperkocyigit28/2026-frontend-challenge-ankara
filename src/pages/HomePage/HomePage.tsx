@@ -51,6 +51,8 @@ export default function HomePage() {
   }, [filtered, currentPage])
 
   useEffect(() => {
+    // Keep the URL canonical: omit ?page=1 and clamp stale page numbers after
+    // search/filter changes shrink the result set.
     const normalized = currentPage <= 1 ? '' : String(currentPage)
     if (pageParam !== normalized) {
       setPageParam(normalized)

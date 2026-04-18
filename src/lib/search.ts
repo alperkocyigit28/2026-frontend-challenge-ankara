@@ -24,6 +24,8 @@ function foldSearchText(value: string): string {
 }
 
 export function normalizeSearchText(value: string): string {
+  // Normalize Turkish characters and punctuation so fuzzy matching works
+  // across keyboard/layout differences like "Kağan" vs "Kagan".
   return foldSearchText(value)
     .normalize('NFKD')
     .replace(/[\u0300-\u036f]/g, '')
@@ -59,6 +61,8 @@ function isWithinEditDistance(
   let prev = Array.from({ length: bLen + 1 }, (_, i) => i)
 
   for (let i = 1; i <= aLen; i += 1) {
+    // Keep only the previous DP row because the matcher only needs a small
+    // bounded edit distance, not the full matrix.
     const next = [i]
     let rowMin = next[0]
 
@@ -84,6 +88,8 @@ function fuzzyTokenMatch(haystackToken: string, queryToken: string): boolean {
   if (!queryToken) return true
   if (haystackToken.includes(queryToken)) return true
 
+  // Accept ordered partial input like "kgn" for "kagan" before falling back
+  // to typo-tolerant edit distance.
   if (queryToken.length >= 3 && isSubsequence(queryToken, haystackToken)) {
     return true
   }
@@ -111,6 +117,8 @@ export function matchesFuzzyText(
   const haystackTokens = tokenizeSearchText(haystack)
   const queryTokens = tokenizeSearchText(query)
 
+  // Every query token must match at least one haystack token so multi-word
+  // searches stay strict enough to be useful.
   return queryTokens.every((queryToken) =>
     haystackTokens.some((haystackToken) =>
       fuzzyTokenMatch(haystackToken, queryToken),

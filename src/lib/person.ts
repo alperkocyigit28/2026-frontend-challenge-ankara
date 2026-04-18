@@ -37,6 +37,8 @@ function basePersonKey(name: string): string {
   const cleaned = cleanPersonName(name)
   if (!cleaned) return ''
 
+  // Collapse diacritics, punctuation, and spacing so near-identical names
+  // map to a single identity key.
   return foldTurkish(cleaned)
     .normalize('NFKD')
     .replace(/[\u0300-\u036f]/g, '')
@@ -48,6 +50,8 @@ function basePersonKey(name: string): string {
 
 export function personKey(name: string): string {
   const key = basePersonKey(name)
+  // Apply explicit aliases after normalization so one-off dataset variants can
+  // be merged without changing the raw records.
   return PERSON_ALIAS_BY_KEY[key] ?? key
 }
 
