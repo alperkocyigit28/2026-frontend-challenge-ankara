@@ -78,12 +78,21 @@
 .events::before {
   content: '';
   position: absolute;
-  left: 7px;
+  left: 6px;
   top: 6px;
   bottom: 6px;
-  width: 2px;
-  background: var(--border);
-  border-radius: 2px;
+  width: 4px;
+  background: linear-gradient(
+    180deg,
+    rgba(125, 118, 101, 0.28) 0%,
+    rgba(125, 118, 101, 0.62) 18%,
+    rgba(125, 118, 101, 0.62) 82%,
+    rgba(125, 118, 101, 0.28) 100%
+  );
+  border-radius: 999px;
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.45),
+    inset 0 0 0 1px rgba(96, 86, 64, 0.08);
 }
 
 .event {
