@@ -1,3 +1,4 @@
+import { useI18n } from '../../i18n'
 import styles from './style.module.css'
 
 interface BlockProps {
@@ -39,8 +40,9 @@ export function SkeletonCard() {
 }
 
 export function SkeletonGrid({ count = 6 }: { count?: number }) {
+  const { copy } = useI18n()
   return (
-    <div className={styles.grid} role="status" aria-label="Loading records">
+    <div className={styles.grid} role="status" aria-label={copy.common.loading}>
       {Array.from({ length: count }).map((_, i) => (
         <SkeletonCard key={i} />
       ))}

@@ -1,6 +1,8 @@
 import clsx from 'clsx'
 import { SOURCES } from '../../api/forms'
-import { SOURCE_LABEL, type Source } from '../../types/records'
+import { useI18n } from '../../i18n'
+import { getSourceLabel } from '../../lib/copy'
+import type { Source } from '../../types/records'
 import styles from './style.module.css'
 
 interface Props {
@@ -9,6 +11,7 @@ interface Props {
 }
 
 export default function SourceFilter({ value, onChange }: Props) {
+  const { locale, copy } = useI18n()
   const toggle = (s: Source) => {
     if (value.includes(s)) {
       onChange(value.filter((x) => x !== s))
@@ -17,7 +20,7 @@ export default function SourceFilter({ value, onChange }: Props) {
     }
   }
   return (
-    <div className={styles.row} role="group" aria-label="Filter by source">
+    <div className={styles.row} role="group" aria-label={copy.sourceFilter.ariaLabel}>
       {SOURCES.map((s) => {
         const active = value.includes(s)
         return (
@@ -28,7 +31,7 @@ export default function SourceFilter({ value, onChange }: Props) {
             aria-pressed={active}
             onClick={() => toggle(s)}
           >
-            {SOURCE_LABEL[s]}
+            {getSourceLabel(locale, s)}
           </button>
         )
       })}

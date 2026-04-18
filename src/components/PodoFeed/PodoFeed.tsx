@@ -1,6 +1,7 @@
 import LocationChip from '../LocationChip'
 import PersonChip from '../PersonChip'
 import SourceBadge from '../SourceBadge'
+import { useI18n } from '../../i18n'
 import { formatDateTime, formatRelative } from '../../lib/format'
 import { podoActivity } from '../../lib/derive'
 import type { InvestigationRecord } from '../../types/records'
@@ -12,16 +13,17 @@ interface Props {
 }
 
 export default function PodoFeed({ records, limit = 5 }: Props) {
+  const { locale, copy } = useI18n()
   const recent = podoActivity(records, limit)
 
   return (
-    <section className={styles.panel} aria-label="Podo's recent activity">
+    <section className={styles.panel} aria-label={copy.podoFeed.ariaLabel}>
       <div className={styles.head}>
-        <span className={styles.title}>Where is Podo?</span>
-        <span className={styles.hint}>most recent mentions</span>
+        <span className={styles.title}>{copy.podoFeed.title}</span>
+        <span className={styles.hint}>{copy.podoFeed.hint}</span>
       </div>
       {recent.length === 0 ? (
-        <p className={styles.empty}>No records mention Podo yet.</p>
+        <p className={styles.empty}>{copy.podoFeed.empty}</p>
       ) : (
         <ul className={styles.list}>
           {recent.map((r) => (
@@ -30,8 +32,8 @@ export default function PodoFeed({ records, limit = 5 }: Props) {
               <div className={styles.body}>
                 <div className={styles.meta}>
                   <SourceBadge source={r.source} />
-                  <span className={styles.time} title={formatDateTime(r.at)}>
-                    {formatRelative(r.at)}
+                  <span className={styles.time} title={formatDateTime(r.at, locale)}>
+                    {formatRelative(r.at, locale)}
                   </span>
                 </div>
                 <div className={styles.line}>
@@ -48,45 +50,46 @@ export default function PodoFeed({ records, limit = 5 }: Props) {
 }
 
 function PodoLine({ record }: { record: InvestigationRecord }) {
+  const { copy } = useI18n()
   switch (record.source) {
     case 'checkin':
       return (
         <>
           <PersonChip name={record.person} />
-          <span>checked in at</span>
+          <span>{copy.record.checkedInAt}</span>
         </>
       )
     case 'message':
       return (
         <>
           <PersonChip name={record.sender} />
-          <span>messaged</span>
+          <span>{copy.record.messaged}</span>
           <PersonChip name={record.recipient} />
-          <span>from</span>
+          <span>{copy.record.from}</span>
         </>
       )
     case 'sighting':
       return (
         <>
           <PersonChip name={record.person} />
-          <span>seen with</span>
+          <span>{copy.record.seenWith}</span>
           <PersonChip name={record.seenWith} />
-          <span>at</span>
+          <span>{copy.record.at}</span>
         </>
       )
     case 'note':
       return (
         <>
           <PersonChip name={record.author} />
-          <span>wrote about Podo at</span>
+          <span>{copy.record.wroteAboutPodoAt}</span>
         </>
       )
     case 'tip':
       return (
         <>
-          <span>Tip on</span>
+          <span>{copy.record.tipOnLower}</span>
           <PersonChip name={record.suspect} />
-          <span>near</span>
+          <span>{copy.record.near}</span>
         </>
       )
   }

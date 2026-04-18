@@ -9,14 +9,16 @@ import { SkeletonCard } from '../../components/Skeleton'
 import { EmptyState, ErrorState } from '../../components/StateView'
 import { useAllRecords } from '../../hooks/useAllRecords'
 import { useUrlList, useUrlQuery } from '../../hooks/useUrlQuery'
+import { useI18n } from '../../i18n'
+import {
+  getSourceLabel,
+  recordHeadlineForLocale,
+  type Locale,
+} from '../../lib/copy'
 import { recordPreview, recordHeadline } from '../../lib/derive'
 import { filterRecords } from '../../lib/search'
 import { formatRelative } from '../../lib/format'
-import {
-  SOURCE_LABEL,
-  type InvestigationRecord,
-  type Source,
-} from '../../types/records'
+import { type InvestigationRecord, type Source } from '../../types/records'
 import styles from './style.module.css'
 
 const ANKARA: [number, number] = [39.9334, 32.8597]
@@ -41,17 +43,24 @@ const escapeHtml = (s: string) =>
     .replace(/"/g, '&quot;')
     .replace(/'/g, '&#39;')
 
-function popupHtml(r: InvestigationRecord, others: InvestigationRecord[]) {
-  const when = r.at ? formatRelative(r.at) : ''
-  const headline = escapeHtml(recordHeadline(r))
+function popupHtml(
+  r: InvestigationRecord,
+  others: InvestigationRecord[],
+  locale: Locale,
+) {
+  const when = r.at ? formatRelative(r.at, locale) : ''
+  const headline = escapeHtml(recordHeadline(r, locale))
   const preview = escapeHtml(recordPreview(r))
   const location = r.location ? escapeHtml(r.location) : ''
+  const sourceLabel = getSourceLabel(locale, r.source)
   const othersBlock =
     others.length > 0
       ? `
     <div class="${styles.popupOthers}">
       <div class="${styles.popupOthersLabel}">
-        ${others.length} other event${others.length === 1 ? '' : 's'} at this spot
+        ${locale === 'tr'
+          ? `${others.length} başka olay bu noktada`
+          : `${others.length} other event${others.length === 1 ? '' : 's'} at this spot`}
       </div>
       <ul class="${styles.popupOthersList}">
         ${others
@@ -62,8 +71,8 @@ function popupHtml(r: InvestigationRecord, others: InvestigationRecord[]) {
               recordKey(o),
             )}">
               <span class="${styles.popupOtherDot}" style="background:${SOURCE_COLOR[o.source]}"></span>
-              <span class="${styles.popupOtherLabel}">${escapeHtml(SOURCE_LABEL[o.source])}</span>
-              <span class="${styles.popupOtherText}">${escapeHtml(recordHeadline(o))}</span>
+              <span class="${styles.popupOtherLabel}">${escapeHtml(getSourceLabel(locale, o.source))}</span>
+              <span class="${styles.popupOtherText}">${escapeHtml(recordHeadline(o, locale))}</span>
             </button>
           </li>
         `,
@@ -76,13 +85,13 @@ function popupHtml(r: InvestigationRecord, others: InvestigationRecord[]) {
   const locationLink = r.location
     ? `<button type="button" class="${styles.popupLocLink}" data-location="${escapeHtml(
         r.location,
-      )}">View ${location} →</button>`
+      )}">${locale === 'tr' ? `${location} konumunu aç →` : `View ${location} →`}</button>`
     : ''
   return `
     <div class="${styles.popup}">
       <div class="${styles.popupHead}">
         <span class="${styles.popupBadge}" style="background:${SOURCE_COLOR[r.source]}">
-          ${escapeHtml(SOURCE_LABEL[r.source])}
+          ${escapeHtml(sourceLabel)}
         </span>
         <span class="${styles.popupTime}">${escapeHtml(when)}</span>
       </div>
@@ -118,6 +127,7 @@ function makeIcon(source: Source, isSelected: boolean) {
 }
 
 export default function MapPage() {
+  const { locale, copy } = useI18n()
   const navigate = useNavigate()
   const { records, isLoading, isError, errors, refetch } = useAllRecords()
   const [rawSources, setSources] = useUrlList('source')
@@ -200,7 +210,7 @@ export default function MapPage() {
         icon: makeIcon(r.source, isSelected),
         zIndexOffset: isSelected ? 1000 : 0,
       })
-      marker.bindPopup(() => popupHtml(r, siblings), {
+      marker.bindPopup(() => popupHtml(r, siblings, locale), {
         maxWidth: 280,
         className: styles.leafletPopup,
       })
@@ -242,7 +252,7 @@ export default function MapPage() {
       const group = L.featureGroup(markers)
       map.fitBounds(group.getBounds().pad(0.15), { animate: false })
     }
-  }, [mapped, coordGroups, selectedKey])
+  }, [mapped, coordGroups, selectedKey, locale])
 
   useEffect(() => {
     if (!selectedKey) return
@@ -278,11 +288,8 @@ export default function MapPage() {
     <>
       <div className={styles.header}>
         <div>
-          <h1 className={styles.title}>Map</h1>
-          <p className={styles.subtitle}>
-            {mapped.length} event{mapped.length === 1 ? '' : 's'} plotted across
-            Ankara. Click any pin or list row — the other view follows.
-          </p>
+          <h1 className={styles.title}>{copy.map.title}</h1>
+          <p className={styles.subtitle}>{copy.map.subtitle(mapped.length)}</p>
         </div>
         <SourceFilter value={sources} onChange={(v) => setSources(v)} />
       </div>
@@ -291,7 +298,7 @@ export default function MapPage() {
         <SearchInput
           value={query}
           onChange={setQuery}
-          placeholder="Search by person, location, or text…"
+          placeholder={copy.map.searchPlaceholder}
         />
       </div>
 
@@ -306,17 +313,17 @@ export default function MapPage() {
             {mapped.length === 0 && (
               <div className={styles.overlay}>
                 <EmptyState
-                  title="No mappable events"
-                  hint="No records have coordinates for the current filter."
+                  title={copy.map.emptyTitle}
+                  hint={copy.map.emptyHint}
                 />
               </div>
             )}
           </div>
 
-          <aside className={styles.listPane} aria-label="Mapped records">
+          <aside className={styles.listPane} aria-label={copy.map.listAria}>
             <header className={styles.listHead}>
               <span className={styles.listCount}>
-                {mapped.length} result{mapped.length === 1 ? '' : 's'}
+                {copy.common.resultCount(mapped.length)}
               </span>
               {selected && (
                 <button
@@ -324,14 +331,12 @@ export default function MapPage() {
                   className={styles.clear}
                   onClick={() => setSelectedKey(null)}
                 >
-                  Clear selection
+                  {copy.common.clearSelection}
                 </button>
               )}
             </header>
             {mapped.length === 0 ? (
-              <div className={styles.listEmpty}>
-                No events match the current filter.
-              </div>
+              <div className={styles.listEmpty}>{copy.map.noMatches}</div>
             ) : (
               <ul ref={listRef} className={styles.list}>
                 {mapped.map((r) => {
@@ -360,14 +365,14 @@ export default function MapPage() {
                         <span className={styles.listBody}>
                           <span className={styles.listTop}>
                             <span className={styles.listSource}>
-                              {SOURCE_LABEL[r.source]}
+                              {getSourceLabel(locale, r.source)}
                             </span>
                             <span className={styles.listTime}>
-                              {r.at ? formatRelative(r.at) : ''}
+                              {r.at ? formatRelative(r.at, locale) : ''}
                             </span>
                           </span>
                           <span className={styles.listTitle}>
-                            {recordHeadline(r)}
+                            {recordHeadlineForLocale(r, locale)}
                           </span>
                           <span className={styles.listPreview}>
                             {recordPreview(r)}

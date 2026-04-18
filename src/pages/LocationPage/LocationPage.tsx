@@ -4,10 +4,12 @@ import RecordCard from '../../components/RecordCard'
 import { SkeletonGrid } from '../../components/Skeleton'
 import { EmptyState, ErrorState } from '../../components/StateView'
 import { useAllRecords } from '../../hooks/useAllRecords'
+import { useI18n } from '../../i18n'
 import { buildLocations } from '../../lib/derive'
 import styles from './style.module.css'
 
 export default function LocationPage() {
+  const { copy } = useI18n()
   const { name: rawName } = useParams<{ name: string }>()
   const decoded = rawName ? decodeURIComponent(rawName) : ''
   const { records, isLoading, isError, errors, refetch } = useAllRecords()
@@ -22,7 +24,7 @@ export default function LocationPage() {
     return (
       <>
         <Link to="/locations" className={styles.back}>
-          ← Back to locations
+          {copy.common.backToLocations}
         </Link>
         <SkeletonGrid count={4} />
       </>
@@ -33,7 +35,7 @@ export default function LocationPage() {
     return (
       <>
         <Link to="/locations" className={styles.back}>
-          ← Back to locations
+          {copy.common.backToLocations}
         </Link>
         <ErrorState errors={errors} onRetry={refetch} />
       </>
@@ -44,11 +46,11 @@ export default function LocationPage() {
     return (
       <>
         <Link to="/locations" className={styles.back}>
-          ← Back to locations
+          {copy.common.backToLocations}
         </Link>
         <EmptyState
-          title={`No location "${decoded}"`}
-          hint="This place may have been removed or the URL is wrong."
+          title={copy.locations.locationMissingTitle(decoded)}
+          hint={copy.locations.locationMissingHint}
         />
       </>
     )
@@ -57,20 +59,20 @@ export default function LocationPage() {
   return (
     <>
       <Link to="/locations" className={styles.back}>
-        ← Back to locations
+        {copy.common.backToLocations}
       </Link>
 
       <div className={styles.header}>
         <h1 className={styles.name}>{location.name}</h1>
       </div>
       <p className={styles.subtitle}>
-        {location.records.length} event{location.records.length === 1 ? '' : 's'}
+        {copy.common.eventCount(location.records.length)}
         {location.coords
           ? ` · ${location.coords[0].toFixed(5)}, ${location.coords[1].toFixed(5)}`
           : ''}
       </p>
 
-      <h2 className={styles.sectionTitle}>Events at this location</h2>
+      <h2 className={styles.sectionTitle}>{copy.locations.eventsAtLocation}</h2>
       <section className={styles.grid}>
         {location.records.map((r) => (
           <RecordCard key={`${r.source}-${r.id}`} record={r} />

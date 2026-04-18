@@ -1,5 +1,6 @@
 import type { Person, Location } from '../types/entities'
 import type { InvestigationRecord } from '../types/records'
+import { getCopy, recordHeadlineForLocale, type Locale } from './copy'
 import { canonicalPersonName, personKey } from './person'
 
 export function recordPeople(r: InvestigationRecord): string[] {
@@ -32,19 +33,11 @@ export function recordPreview(r: InvestigationRecord): string {
   }
 }
 
-export function recordHeadline(r: InvestigationRecord): string {
-  switch (r.source) {
-    case 'checkin':
-      return `${r.person} checked in`
-    case 'message':
-      return `${r.sender} → ${r.recipient}`
-    case 'sighting':
-      return `${r.person} seen with ${r.seenWith}`
-    case 'note':
-      return `${r.author}'s note`
-    case 'tip':
-      return `Tip on ${r.suspect}`
-  }
+export function recordHeadline(
+  r: InvestigationRecord,
+  locale: Locale = 'en',
+): string {
+  return recordHeadlineForLocale(r, locale)
 }
 
 export function buildPeople(records: InvestigationRecord[]): Person[] {
@@ -121,8 +114,10 @@ export interface SuspicionBreakdown {
 export function suspicionBreakdown(
   name: string,
   records: InvestigationRecord[],
+  locale: Locale = 'en',
 ): SuspicionBreakdown {
   const k = personKey(name)
+  const copy = getCopy(locale)
   const reasons: SuspicionReason[] = []
 
   for (const r of records) {
@@ -130,7 +125,7 @@ export function suspicionBreakdown(
       const points =
         r.confidence === 'high' ? 3 : r.confidence === 'medium' ? 2 : 1
       reasons.push({
-        label: `${r.confidence}-confidence anonymous tip`,
+        label: copy.suspicion.anonymousTip(copy.severity[r.confidence]),
         points,
         recordId: r.id,
         source: r.source,
@@ -143,7 +138,9 @@ export function suspicionBreakdown(
       k !== 'podo'
     ) {
       reasons.push({
-        label: `sighted with Podo at ${r.location || 'unknown place'}`,
+        label: copy.suspicion.sightedWithPodo(
+          r.location || copy.record.unknownPlace,
+        ),
         points: 1,
         recordId: r.id,
         source: r.source,
@@ -155,9 +152,7 @@ export function suspicionBreakdown(
       r.urgency === 'high'
     ) {
       reasons.push({
-        label: `sent high-urgency message to ${canonicalPersonName(
-          r.recipient,
-        )}`,
+        label: copy.suspicion.urgentMessage(canonicalPersonName(r.recipient)),
         points: 1,
         recordId: r.id,
         source: r.source,
@@ -174,8 +169,9 @@ export function suspicionBreakdown(
 export function scoreSuspicion(
   name: string,
   records: InvestigationRecord[],
+  locale: Locale = 'en',
 ): number {
-  return suspicionBreakdown(name, records).total
+  return suspicionBreakdown(name, records, locale).total
 }
 
 export function podoActivity(

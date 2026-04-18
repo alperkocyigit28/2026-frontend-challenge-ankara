@@ -5,11 +5,13 @@ import { SkeletonGrid } from '../../components/Skeleton'
 import { EmptyState, ErrorState } from '../../components/StateView'
 import { useAllRecords } from '../../hooks/useAllRecords'
 import { useUrlQuery } from '../../hooks/useUrlQuery'
+import { useI18n } from '../../i18n'
 import { buildPeople } from '../../lib/derive'
 import { personKey } from '../../lib/person'
 import styles from './style.module.css'
 
 export default function PeoplePage() {
+  const { copy } = useI18n()
   const { records, isLoading, isError, errors, refetch } = useAllRecords()
   const [query, setQuery] = useUrlQuery('q')
 
@@ -23,13 +25,13 @@ export default function PeoplePage() {
   return (
     <>
       <header className={styles.header}>
-        <h1>People</h1>
+        <h1>{copy.people.title}</h1>
         <p className={styles.subtitle} aria-live="polite">
           {isLoading
-            ? 'Loading…'
+            ? copy.common.loading
             : query
-              ? `${filtered.length} of ${people.length} people match "${query}".`
-              : `${people.length} people mentioned across all sources.`}
+              ? copy.people.matchCount(filtered.length, people.length, query)
+              : copy.people.totalCount(people.length)}
         </p>
       </header>
 
@@ -37,7 +39,7 @@ export default function PeoplePage() {
         <SearchInput
           value={query}
           onChange={setQuery}
-          placeholder="Search by name…"
+          placeholder={copy.people.searchPlaceholder}
         />
       </div>
 
@@ -47,12 +49,8 @@ export default function PeoplePage() {
         <SkeletonGrid count={8} />
       ) : filtered.length === 0 ? (
         <EmptyState
-          title={query ? `No people match "${query}"` : 'No people yet'}
-          hint={
-            query
-              ? 'Try a shorter or different name.'
-              : 'People are derived from submitted records.'
-          }
+          title={query ? copy.people.noMatchTitle(query) : copy.people.emptyTitle}
+          hint={query ? copy.people.noMatchHint : copy.people.emptyHint}
         />
       ) : (
         <section className={styles.grid}>
@@ -64,12 +62,12 @@ export default function PeoplePage() {
             >
               <div className={styles.name}>{p.name}</div>
               <div className={styles.meta}>
-                {p.records.length} record{p.records.length === 1 ? '' : 's'}
+                {copy.common.recordCount(p.records.length)}
               </div>
               <div className={styles.badges}>
                 {p.suspicionScore > 0 && (
                   <span className={`${styles.badge} ${styles.suspicion}`}>
-                    suspicion {p.suspicionScore}
+                    {copy.common.suspicionScore(p.suspicionScore)}
                   </span>
                 )}
               </div>

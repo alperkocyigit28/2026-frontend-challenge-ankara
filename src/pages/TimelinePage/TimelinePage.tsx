@@ -5,6 +5,8 @@ import LocationChip from '../../components/LocationChip'
 import { SkeletonGrid } from '../../components/Skeleton'
 import { EmptyState, ErrorState } from '../../components/StateView'
 import { useAllRecords } from '../../hooks/useAllRecords'
+import { useI18n } from '../../i18n'
+import { LOCALE_TAG } from '../../lib/copy'
 import { recordPeople, recordPreview, recordHeadline } from '../../lib/derive'
 import { formatDateTime } from '../../lib/format'
 import { personKey } from '../../lib/person'
@@ -13,8 +15,8 @@ import styles from './style.module.css'
 
 const isPodo = (name: string) => personKey(name) === 'podo'
 
-function dayKey(d: Date): string {
-  return d.toLocaleDateString(undefined, {
+function dayKey(d: Date, localeTag: string): string {
+  return d.toLocaleDateString(localeTag, {
     weekday: 'long',
     day: 'numeric',
     month: 'long',
@@ -22,11 +24,11 @@ function dayKey(d: Date): string {
   })
 }
 
-function groupByDay(records: InvestigationRecord[]) {
+function groupByDay(records: InvestigationRecord[], localeTag: string) {
   const groups = new Map<string, InvestigationRecord[]>()
   for (const r of records) {
     if (!r.at) continue
-    const key = dayKey(r.at)
+    const key = dayKey(r.at, localeTag)
     let list = groups.get(key)
     if (!list) {
       list = []
@@ -38,6 +40,7 @@ function groupByDay(records: InvestigationRecord[]) {
 }
 
 export default function TimelinePage() {
+  const { locale, copy } = useI18n()
   const { records, isLoading, isError, errors, refetch } = useAllRecords()
   const [podoOnly, setPodoOnly] = useState(true)
 
@@ -51,27 +54,28 @@ export default function TimelinePage() {
     )
   }, [records, podoOnly])
 
-  const groups = useMemo(() => groupByDay(filtered), [filtered])
+  const groups = useMemo(
+    () => groupByDay(filtered, LOCALE_TAG[locale]),
+    [filtered, locale],
+  )
 
   return (
     <>
       <div className={styles.header}>
         <div>
-          <h1 className={styles.title}>Timeline</h1>
+          <h1 className={styles.title}>{copy.timeline.title}</h1>
           <p className={styles.subtitle}>
-            {podoOnly
-              ? "Chronological trail of every record where Podo appears."
-              : 'Every record in chronological order.'}
+            {podoOnly ? copy.timeline.subtitlePodo : copy.timeline.subtitleAll}
           </p>
         </div>
-        <div className={styles.toggle} role="group" aria-label="Timeline scope">
+        <div className={styles.toggle} role="group" aria-label={copy.timeline.scopeAria}>
           <button
             type="button"
             className={styles.toggleBtn}
             data-active={podoOnly}
             onClick={() => setPodoOnly(true)}
           >
-            Podo's trail
+            {copy.timeline.podoTrail}
           </button>
           <button
             type="button"
@@ -79,7 +83,7 @@ export default function TimelinePage() {
             data-active={!podoOnly}
             onClick={() => setPodoOnly(false)}
           >
-            All records
+            {copy.timeline.allRecords}
           </button>
         </div>
       </div>
@@ -90,12 +94,8 @@ export default function TimelinePage() {
         <ErrorState errors={errors} onRetry={refetch} />
       ) : filtered.length === 0 ? (
         <EmptyState
-          title="Nothing on this timeline yet"
-          hint={
-            podoOnly
-              ? 'No records mention Podo. Try "All records" to see everything.'
-              : 'No records with timestamps were found.'
-          }
+          title={copy.timeline.emptyTitle}
+          hint={podoOnly ? copy.timeline.emptyHintPodo : copy.timeline.emptyHintAll}
         />
       ) : (
         <div className={styles.timeline}>
@@ -110,7 +110,7 @@ export default function TimelinePage() {
                       <div className={styles.cardHead}>
                         <SourceBadge source={r.source} />
                         <time className={styles.time}>
-                          {r.at ? formatDateTime(r.at) : ''}
+                          {r.at ? formatDateTime(r.at, locale) : ''}
                         </time>
                       </div>
                       <div className={styles.headline}>
@@ -135,11 +135,12 @@ export default function TimelinePage() {
 }
 
 function Headline({ record: r }: { record: InvestigationRecord }) {
+  const { locale, copy } = useI18n()
   switch (r.source) {
     case 'checkin':
       return (
         <>
-          <PersonChip name={r.person} /> <span>checked in</span>
+          <PersonChip name={r.person} /> <span>{copy.record.checkedIn}</span>
         </>
       )
     case 'message':
@@ -152,23 +153,23 @@ function Headline({ record: r }: { record: InvestigationRecord }) {
     case 'sighting':
       return (
         <>
-          <PersonChip name={r.person} /> <span>seen with</span>{' '}
+          <PersonChip name={r.person} /> <span>{copy.record.seenWith}</span>{' '}
           <PersonChip name={r.seenWith} />
         </>
       )
     case 'note':
       return (
         <>
-          <PersonChip name={r.author} /> <span>noted</span>
+          <PersonChip name={r.author} /> <span>{copy.record.noted}</span>
         </>
       )
     case 'tip':
       return (
         <>
-          <span>tip on</span> <PersonChip name={r.suspect} />
+          <span>{copy.record.tipOnLower}</span> <PersonChip name={r.suspect} />
         </>
       )
     default:
-      return <>{recordHeadline(r)}</>
+      return <>{recordHeadline(r, locale)}</>
   }
 }

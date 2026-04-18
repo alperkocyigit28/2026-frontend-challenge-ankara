@@ -5,10 +5,12 @@ import { SkeletonGrid } from '../../components/Skeleton'
 import { EmptyState, ErrorState } from '../../components/StateView'
 import { useAllRecords } from '../../hooks/useAllRecords'
 import { useUrlQuery } from '../../hooks/useUrlQuery'
+import { useI18n } from '../../i18n'
 import { buildLocations } from '../../lib/derive'
 import styles from './style.module.css'
 
 export default function LocationsPage() {
+  const { copy } = useI18n()
   const { records, isLoading, isError, errors, refetch } = useAllRecords()
   const [query, setQuery] = useUrlQuery('q')
 
@@ -22,13 +24,13 @@ export default function LocationsPage() {
   return (
     <>
       <header className={styles.header}>
-        <h1>Locations</h1>
+        <h1>{copy.locations.title}</h1>
         <p className={styles.subtitle} aria-live="polite">
           {isLoading
-            ? 'Loading…'
+            ? copy.common.loading
             : query
-              ? `${filtered.length} of ${locations.length} locations match "${query}".`
-              : `${locations.length} place${locations.length === 1 ? '' : 's'} mentioned across all records.`}
+              ? copy.locations.matchCount(filtered.length, locations.length, query)
+              : copy.locations.totalCount(locations.length)}
         </p>
       </header>
 
@@ -36,7 +38,7 @@ export default function LocationsPage() {
         <SearchInput
           value={query}
           onChange={setQuery}
-          placeholder="Search by place name…"
+          placeholder={copy.locations.searchPlaceholder}
         />
       </div>
 
@@ -46,12 +48,8 @@ export default function LocationsPage() {
         <SkeletonGrid count={6} />
       ) : filtered.length === 0 ? (
         <EmptyState
-          title={query ? `No locations match "${query}"` : 'No locations yet'}
-          hint={
-            query
-              ? 'Try a shorter or different place name.'
-              : 'Locations are derived from submitted records.'
-          }
+          title={query ? copy.locations.noMatchTitle(query) : copy.locations.emptyTitle}
+          hint={query ? copy.locations.noMatchHint : copy.locations.emptyHint}
         />
       ) : (
         <section className={styles.grid}>
@@ -63,7 +61,7 @@ export default function LocationsPage() {
             >
               <div className={styles.name}>{loc.name}</div>
               <div className={styles.meta}>
-                {loc.records.length} event{loc.records.length === 1 ? '' : 's'}
+                {copy.common.eventCount(loc.records.length)}
               </div>
               {loc.coords && (
                 <div className={styles.coords}>

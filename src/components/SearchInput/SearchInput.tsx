@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useDebounced } from '../../hooks/useDebounced'
+import { useI18n } from '../../i18n'
 import styles from './style.module.css'
 
 interface Props {
@@ -13,10 +14,11 @@ interface Props {
 export default function SearchInput({
   value,
   onChange,
-  placeholder = 'Search…',
+  placeholder,
   delay = 200,
-  ariaLabel = 'Search',
+  ariaLabel,
 }: Props) {
+  const { copy } = useI18n()
   const [local, setLocal] = useState(value)
   const debounced = useDebounced(local, delay)
 
@@ -46,16 +48,16 @@ export default function SearchInput({
         className={styles.input}
         value={local}
         onChange={(e) => setLocal(e.target.value)}
-        placeholder={placeholder}
-        aria-label={ariaLabel}
+        placeholder={placeholder ?? copy.search.placeholder}
+        aria-label={ariaLabel || copy.search.label}
       />
       {local && (
         <button
           type="button"
           className={styles.clear}
           onClick={() => setLocal('')}
-          aria-label="Clear search"
-          title="Clear"
+          aria-label={copy.search.clear}
+          title={copy.search.clearShort}
         >
           ×
         </button>

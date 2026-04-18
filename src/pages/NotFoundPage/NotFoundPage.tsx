@@ -1,6 +1,8 @@
 import { Link } from 'react-router-dom'
+import { useI18n } from '../../i18n'
 
 export default function NotFoundPage() {
+  const { copy } = useI18n()
   return (
     <div
       style={{
@@ -25,13 +27,13 @@ export default function NotFoundPage() {
         404
       </div>
       <div style={{ color: 'var(--text-h)', fontSize: '18px', fontWeight: 500 }}>
-        This trail has gone cold.
+        {copy.notFound.title}
       </div>
       <p style={{ maxWidth: 420, lineHeight: 1.5 }}>
-        The page you're looking for doesn't exist in the investigation.
+        {copy.notFound.body}
       </p>
       <div style={{ marginTop: 8 }}>
-        <Link to="/">← Return to the overview</Link>
+        <Link to="/">{copy.notFound.back}</Link>
       </div>
     </div>
   )

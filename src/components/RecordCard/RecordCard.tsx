@@ -1,6 +1,8 @@
 import type { MouseEvent, KeyboardEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
 import clsx from 'clsx'
+import { useI18n } from '../../i18n'
+import { getSeverityLabel, recordHeadlineForLocale } from '../../lib/copy'
 import type { InvestigationRecord } from '../../types/records'
 import { recordPreview } from '../../lib/derive'
 import { formatDateTime, formatRelative } from '../../lib/format'
@@ -14,6 +16,7 @@ interface Props {
 }
 
 export default function RecordCard({ record }: Props) {
+  const { locale, copy } = useI18n()
   const navigate = useNavigate()
   const preview = recordPreview(record)
   const mappable = !!record.coords
@@ -43,12 +46,12 @@ export default function RecordCard({ record }: Props) {
       onKeyDown={handleKeyDown}
       role={mappable ? 'button' : undefined}
       tabIndex={mappable ? 0 : undefined}
-      aria-label={mappable ? 'Open on map' : undefined}
+      aria-label={mappable ? copy.record.openOnMap : undefined}
     >
       <div className={styles.head}>
         <SourceBadge source={record.source} />
-        <span className={styles.time} title={formatDateTime(record.at)}>
-          {formatRelative(record.at)}
+        <span className={styles.time} title={formatDateTime(record.at, locale)}>
+          {formatRelative(record.at, locale)}
         </span>
       </div>
 
@@ -64,7 +67,7 @@ export default function RecordCard({ record }: Props) {
 
       {mappable && (
         <span className={styles.mapHint} aria-hidden>
-          View on map →
+          {copy.record.viewOnMap}
         </span>
       )}
     </article>
@@ -72,12 +75,13 @@ export default function RecordCard({ record }: Props) {
 }
 
 function Headline({ record }: { record: InvestigationRecord }) {
+  const { locale, copy } = useI18n()
   switch (record.source) {
     case 'checkin':
       return (
         <div className={styles.headline}>
           <PersonChip name={record.person} />
-          <span>checked in</span>
+          <span>{copy.record.checkedIn}</span>
         </div>
       )
     case 'message':
@@ -92,7 +96,7 @@ function Headline({ record }: { record: InvestigationRecord }) {
       return (
         <div className={styles.headline}>
           <PersonChip name={record.person} />
-          <span>seen with</span>
+          <span>{copy.record.seenWith}</span>
           <PersonChip name={record.seenWith} />
         </div>
       )
@@ -100,20 +104,23 @@ function Headline({ record }: { record: InvestigationRecord }) {
       return (
         <div className={styles.headline}>
           <PersonChip name={record.author} />
-          <span>wrote a note</span>
+          <span>{copy.record.wroteNote}</span>
         </div>
       )
     case 'tip':
       return (
         <div className={styles.headline}>
-          <span>Tip on</span>
+          <span>{copy.record.tipOnLower}</span>
           <PersonChip name={record.suspect} />
         </div>
       )
+    default:
+      return <div className={styles.headline}>{recordHeadlineForLocale(record, locale)}</div>
   }
 }
 
 function Meta({ record }: { record: InvestigationRecord }) {
+  const { locale, copy } = useI18n()
   return (
     <div className={styles.meta}>
       {record.location && <LocationChip name={record.location} />}
@@ -121,19 +128,19 @@ function Meta({ record }: { record: InvestigationRecord }) {
         <span
           className={`${styles.tag} ${record.confidence === 'high' ? styles.tagHigh : record.confidence === 'medium' ? styles.tagMed : ''}`}
         >
-          confidence: {record.confidence}
+          {copy.record.confidence}: {getSeverityLabel(locale, record.confidence)}
         </span>
       )}
       {record.source === 'message' && (
         <span
           className={`${styles.tag} ${record.urgency === 'high' ? styles.tagHigh : record.urgency === 'medium' ? styles.tagMed : ''}`}
         >
-          urgency: {record.urgency}
+          {copy.record.urgency}: {getSeverityLabel(locale, record.urgency)}
         </span>
       )}
       {record.source === 'note' && record.mentioned.length > 0 && (
         <span className={styles.mentions}>
-          <span className={styles.mentionsLabel}>mentions:</span>
+          <span className={styles.mentionsLabel}>{copy.record.mentions}</span>
           {record.mentioned.map((n) => (
             <PersonChip key={n} name={n} />
           ))}

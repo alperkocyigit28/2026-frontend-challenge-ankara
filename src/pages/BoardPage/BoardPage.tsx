@@ -6,17 +6,13 @@ import { EmptyState, ErrorState } from '../../components/StateView'
 import RecordCard from '../../components/RecordCard'
 import { useAllRecords } from '../../hooks/useAllRecords'
 import { useUrlList, useUrlQuery } from '../../hooks/useUrlQuery'
+import { useI18n } from '../../i18n'
+import { getEdgeLabel } from '../../lib/copy'
 import { buildGraph, type EdgeKind, type GraphLink, type GraphNode } from '../../lib/graph'
 import { suspicionBreakdown } from '../../lib/derive'
 import styles from './style.module.css'
 
 const EDGE_KINDS: EdgeKind[] = ['sighting', 'message', 'mention']
-const EDGE_LABEL: Record<EdgeKind, string> = {
-  sighting: 'Sightings',
-  message: 'Messages',
-  mention: 'Note mentions',
-  accusation: 'Accusations',
-}
 
 const COLOR = {
   neutral: '#c8c5bd',
@@ -45,6 +41,7 @@ function edgeStroke(l: GraphLink) {
 }
 
 export default function BoardPage() {
+  const { locale, copy } = useI18n()
   const { records, isLoading, isError, errors, refetch } = useAllRecords()
   const [rawKinds, setKinds] = useUrlList('edge')
   const activeKinds = (
@@ -75,9 +72,9 @@ export default function BoardPage() {
   const breakdown = useMemo(
     () =>
       selectedNode
-        ? suspicionBreakdown(selectedNode.name, records)
+        ? suspicionBreakdown(selectedNode.name, records, locale)
         : null,
-    [selectedNode, records],
+    [selectedNode, records, locale],
   )
 
   const neighbors = useMemo(() => {
@@ -131,13 +128,10 @@ export default function BoardPage() {
     <>
       <div className={styles.header}>
         <div>
-          <h1 className={styles.title}>Detective Board</h1>
-          <p className={styles.subtitle}>
-            Every person pinned, every relationship strung. Click a pin to focus
-            their network and see the evidence behind each connection.
-          </p>
+          <h1 className={styles.title}>{copy.board.title}</h1>
+          <p className={styles.subtitle}>{copy.board.subtitle}</p>
         </div>
-        <div className={styles.filters} role="group" aria-label="Edge filter">
+        <div className={styles.filters} role="group" aria-label={copy.board.filterAria}>
           {EDGE_KINDS.map((k) => {
             const active = activeKinds.includes(k)
             return (
@@ -151,7 +145,7 @@ export default function BoardPage() {
                 aria-pressed={active}
               >
                 <span className={styles.chipDot} data-kind={k} />
-                {EDGE_LABEL[k]}
+                {getEdgeLabel(locale, k)}
               </button>
             )
           })}
@@ -164,8 +158,8 @@ export default function BoardPage() {
         <ErrorState errors={errors} onRetry={refetch} />
       ) : graph.nodes.length === 0 ? (
         <EmptyState
-          title="No one on the board yet"
-          hint="People appear here once any record names them."
+          title={copy.board.emptyTitle}
+          hint={copy.board.emptyHint}
         />
       ) : (
         <div className={styles.split}>
@@ -304,19 +298,19 @@ export default function BoardPage() {
             <div className={styles.legend} aria-hidden>
               <span className={styles.legendItem}>
                 <span className={styles.swatch} style={{ background: COLOR.podo }} />
-                Podo
+                {copy.board.legendPodo}
               </span>
               <span className={styles.legendItem}>
                 <span className={styles.swatch} style={{ background: COLOR.suspectHigh }} />
-                High suspicion
+                {copy.board.legendHighSuspicion}
               </span>
               <span className={styles.legendItem}>
                 <span className={styles.swatch} style={{ background: COLOR.neutral }} />
-                Clean
+                {copy.board.legendClean}
               </span>
               <span className={styles.legendDivider} />
               <span className={styles.legendItem}>
-                <span className={styles.tipDot} /> Anonymous tips
+                <span className={styles.tipDot} /> {copy.board.legendTips}
               </span>
             </div>
           </div>
@@ -340,18 +334,16 @@ export default function BoardPage() {
 }
 
 function EmptyPanel({ total, linkCount }: { total: number; linkCount: number }) {
+  const { copy } = useI18n()
   return (
     <div className={styles.empty}>
-      <h2 className={styles.emptyTitle}>The board</h2>
-      <p className={styles.emptyText}>
-        {total} {total === 1 ? 'person' : 'people'} pinned · {linkCount}{' '}
-        relationship{linkCount === 1 ? '' : 's'} traced.
-      </p>
+      <h2 className={styles.emptyTitle}>{copy.board.panelTitle}</h2>
+      <p className={styles.emptyText}>{copy.board.panelText(total, linkCount)}</p>
       <ul className={styles.hints}>
-        <li>Pin size grows with suspicion and record count.</li>
-        <li>Red dots around a pin mark anonymous tips against them.</li>
-        <li>Solid lines are sightings, blue arrows are messages, dashed lines are note mentions.</li>
-        <li>Red lines mean a high-urgency message.</li>
+        <li>{copy.board.hint1}</li>
+        <li>{copy.board.hint2}</li>
+        <li>{copy.board.hint3}</li>
+        <li>{copy.board.hint4}</li>
       </ul>
     </div>
   )
@@ -368,25 +360,24 @@ function NodePanel({
   neighbors: string[]
   onClose: () => void
 }) {
+  const { copy } = useI18n()
   return (
     <div className={styles.profile}>
       <header className={styles.profileHead}>
         <div>
           <div className={styles.profileName}>
             {node.name}
-            {node.isPodo && <span className={styles.podoTag}>missing</span>}
+            {node.isPodo && <span className={styles.podoTag}>{copy.board.missingTag}</span>}
           </div>
           <div className={styles.profileMeta}>
-            {node.recordCount} record{node.recordCount === 1 ? '' : 's'} ·{' '}
-            suspicion {node.suspicion}
-            {node.tipCount > 0 && ` · ${node.tipCount} tip${node.tipCount === 1 ? '' : 's'}`}
+            {copy.board.profileMeta(node.recordCount, node.suspicion, node.tipCount)}
           </div>
         </div>
         <button
           type="button"
           className={styles.close}
           onClick={onClose}
-          aria-label="Clear selection"
+          aria-label={copy.common.clearSelection}
         >
           ×
         </button>
@@ -394,7 +385,7 @@ function NodePanel({
 
       {breakdown && breakdown.reasons.length > 0 && (
         <section className={styles.section}>
-          <h3 className={styles.sectionTitle}>Why suspicious</h3>
+          <h3 className={styles.sectionTitle}>{copy.board.whySuspicious}</h3>
           <ul className={styles.reasons}>
             {breakdown.reasons.map((r, i) => (
               <li key={i} className={styles.reason}>
@@ -408,7 +399,7 @@ function NodePanel({
 
       {neighbors.length > 0 && (
         <section className={styles.section}>
-          <h3 className={styles.sectionTitle}>Connected to</h3>
+          <h3 className={styles.sectionTitle}>{copy.common.connectedTo}</h3>
           <div className={styles.neighbors}>
             {neighbors.map((n) => (
               <Link
@@ -424,7 +415,7 @@ function NodePanel({
       )}
 
       <section className={styles.section}>
-        <h3 className={styles.sectionTitle}>Evidence</h3>
+        <h3 className={styles.sectionTitle}>{copy.common.evidence}</h3>
         <div className={styles.records}>
           {node.records.slice(0, 8).map((r) => (
             <RecordCard key={`${r.source}-${r.id}`} record={r} />
@@ -435,7 +426,7 @@ function NodePanel({
             to={`/people/${encodeURIComponent(node.name)}`}
             className={styles.more}
           >
-            View full profile ({node.records.length} records) →
+            {copy.board.fullProfile(node.records.length)}
           </Link>
         )}
       </section>

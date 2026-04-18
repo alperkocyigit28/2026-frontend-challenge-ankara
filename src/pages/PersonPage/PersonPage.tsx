@@ -7,10 +7,12 @@ import { EmptyState, ErrorState } from '../../components/StateView'
 import { useAllRecords } from '../../hooks/useAllRecords'
 import { buildPeople, suspicionBreakdown } from '../../lib/derive'
 import { formatDateTime } from '../../lib/format'
+import { useI18n } from '../../i18n'
 import { personKey } from '../../lib/person'
 import styles from './style.module.css'
 
 export default function PersonPage() {
+  const { locale, copy } = useI18n()
   const { name: rawName } = useParams<{ name: string }>()
   const decoded = rawName ? decodeURIComponent(rawName) : ''
   const { records, isLoading, isError, errors, refetch } = useAllRecords()
@@ -25,7 +27,7 @@ export default function PersonPage() {
     return (
       <>
         <Link to="/people" className={styles.back}>
-          ← Back to people
+          {copy.common.backToPeople}
         </Link>
         <SkeletonGrid count={4} />
       </>
@@ -36,7 +38,7 @@ export default function PersonPage() {
     return (
       <>
         <Link to="/people" className={styles.back}>
-          ← Back to people
+          {copy.common.backToPeople}
         </Link>
         <ErrorState errors={errors} onRetry={refetch} />
       </>
@@ -47,11 +49,11 @@ export default function PersonPage() {
     return (
       <>
         <Link to="/people" className={styles.back}>
-          ← Back to people
+          {copy.common.backToPeople}
         </Link>
         <EmptyState
-          title={`No person named "${decoded}"`}
-          hint="This person may have been removed or the URL is wrong."
+          title={copy.person.missingTitle(decoded)}
+          hint={copy.person.missingHint}
         />
       </>
     )
@@ -60,30 +62,26 @@ export default function PersonPage() {
   return (
     <>
       <Link to="/people" className={styles.back}>
-        ← Back to people
+        {copy.common.backToPeople}
       </Link>
 
       <div className={styles.header}>
         <h1 className={styles.name}>{person.name}</h1>
         {person.suspicionScore > 0 && (
-          <span className={styles.score}>
-            suspicion {person.suspicionScore}
-          </span>
+          <span className={styles.score}>{copy.common.suspicionScore(person.suspicionScore)}</span>
         )}
       </div>
-      <p className={styles.subtitle}>
-        {person.records.length} record{person.records.length === 1 ? '' : 's'}
-      </p>
+      <p className={styles.subtitle}>{copy.common.recordCount(person.records.length)}</p>
 
       <section className={styles.summary}>
         <div className={styles.summaryCard}>
-          <div className={styles.summaryLabel}>Last seen</div>
+          <div className={styles.summaryLabel}>{copy.common.lastSeen}</div>
           <div className={styles.summaryValue}>
-            {formatDateTime(person.lastSeenAt)}
+            {formatDateTime(person.lastSeenAt, locale)}
           </div>
         </div>
         <div className={styles.summaryCard}>
-          <div className={styles.summaryLabel}>Last seen with</div>
+          <div className={styles.summaryLabel}>{copy.common.lastSeenWith}</div>
           <div className={styles.summaryValue}>
             {person.lastSeenWith.length > 0 ? (
               <span style={{ display: 'inline-flex', flexWrap: 'wrap', gap: '6px' }}>
@@ -92,7 +90,7 @@ export default function PersonPage() {
                 ))}
               </span>
             ) : (
-              '—'
+              copy.common.noValue
             )}
           </div>
         </div>
@@ -102,7 +100,7 @@ export default function PersonPage() {
         <SuspicionBreakdown name={person.name} records={records} />
       )}
 
-      <h2 className={styles.sectionTitle}>All records</h2>
+      <h2 className={styles.sectionTitle}>{copy.common.allRecords}</h2>
       <section className={styles.grid}>
         {person.records.map((r) => (
           <RecordCard key={`${r.source}-${r.id}`} record={r} />
@@ -119,12 +117,13 @@ function SuspicionBreakdown({
   name: string
   records: ReturnType<typeof useAllRecords>['records']
 }) {
-  const { total, reasons } = suspicionBreakdown(name, records)
+  const { locale, copy } = useI18n()
+  const { total, reasons } = suspicionBreakdown(name, records, locale)
   return (
-    <section className={styles.breakdown} aria-label="Suspicion score breakdown">
+    <section className={styles.breakdown} aria-label={copy.person.breakdownAria}>
       <div className={styles.breakdownHead}>
-        <span className={styles.breakdownTitle}>Why suspicion is high</span>
-        <span className={styles.breakdownTotal}>total {total}</span>
+        <span className={styles.breakdownTitle}>{copy.person.breakdownTitle}</span>
+        <span className={styles.breakdownTotal}>{copy.common.totalScore(total)}</span>
       </div>
       <ul className={styles.breakdownList}>
         {reasons.map((r, i) => (

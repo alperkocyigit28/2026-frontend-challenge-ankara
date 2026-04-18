@@ -9,12 +9,15 @@ import SuspicionPanel from '../../components/SuspicionPanel'
 import PodoFeed from '../../components/PodoFeed'
 import { useAllRecords } from '../../hooks/useAllRecords'
 import { useUrlList, useUrlQuery } from '../../hooks/useUrlQuery'
+import { useI18n } from '../../i18n'
+import { getSourceLabel } from '../../lib/copy'
 import { buildPeople } from '../../lib/derive'
 import { filterRecords } from '../../lib/search'
-import { SOURCE_LABEL, type Source } from '../../types/records'
+import type { Source } from '../../types/records'
 import styles from './style.module.css'
 
 export default function HomePage() {
+  const { locale, copy } = useI18n()
   const { bySource, records, isLoading, isError, errors, refetch } =
     useAllRecords()
   const [query, setQuery] = useUrlQuery('q')
@@ -37,10 +40,8 @@ export default function HomePage() {
   return (
     <>
       <header className={styles.header}>
-        <h1>Overview</h1>
-        <p className={styles.subtitle}>
-          Tracking Podo's last known movements across five data sources.
-        </p>
+        <h1>{copy.home.title}</h1>
+        <p className={styles.subtitle}>{copy.home.subtitle}</p>
       </header>
 
       {isError && records.length === 0 && (
@@ -52,7 +53,7 @@ export default function HomePage() {
       <section className={styles.stats}>
         {SOURCES.map((s) => (
           <div key={s} className={styles.stat}>
-            <div className={styles.statLabel}>{SOURCE_LABEL[s]}</div>
+            <div className={styles.statLabel}>{getSourceLabel(locale, s)}</div>
             <div className={styles.statValue}>
               {isLoading ? '…' : (bySource[s]?.length ?? 0)}
             </div>
@@ -69,20 +70,20 @@ export default function HomePage() {
 
       <div className={styles.sectionHead}>
         <h2 className={styles.sectionTitle}>
-          {hasFilters ? 'Matching records' : 'Latest activity'}
+          {hasFilters ? copy.home.matchingRecords : copy.home.latestActivity}
         </h2>
         <span className={styles.count} aria-live="polite">
           {isLoading
-            ? 'loading…'
+            ? copy.common.loadingInline
             : hasFilters
-              ? `${filtered.length} of ${records.length}`
-              : `${records.length} total`}
+              ? copy.common.ofTotal(filtered.length, records.length)
+              : copy.common.total(records.length)}
         </span>
         <div className={styles.searchWrap}>
           <SearchInput
             value={query}
             onChange={setQuery}
-            placeholder="Search people, places, notes…"
+            placeholder={copy.home.searchPlaceholder}
           />
         </div>
       </div>
@@ -98,12 +99,8 @@ export default function HomePage() {
         <SkeletonGrid count={6} />
       ) : filtered.length === 0 ? (
         <EmptyState
-          title={hasFilters ? 'No matching records' : 'No records yet'}
-          hint={
-            hasFilters
-              ? 'Try clearing the search or adjusting the source filters.'
-              : 'Submissions will appear here once they arrive.'
-          }
+          title={hasFilters ? copy.home.noMatchTitle : copy.home.emptyTitle}
+          hint={hasFilters ? copy.home.noMatchHint : copy.home.emptyHint}
         />
       ) : (
         <section className={styles.grid}>
