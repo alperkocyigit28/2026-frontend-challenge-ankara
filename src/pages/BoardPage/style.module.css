@@ -195,7 +195,7 @@
   letter-spacing: 0.1em;
   text-transform: uppercase;
   color: #fff;
-  background: #aa3bff;
+  background: var(--accent);
   padding: 2px 6px;
   border-radius: 999px;
 }

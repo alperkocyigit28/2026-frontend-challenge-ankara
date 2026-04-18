@@ -107,7 +107,7 @@ function makeIcon(source: Source, isSelected: boolean) {
   const color = SOURCE_COLOR[source]
   const size = isSelected ? 26 : 16
   const shadow = isSelected
-    ? 'box-shadow: 0 0 0 3px #ffffff, 0 0 0 6px #aa3bff, 0 6px 16px rgba(170,59,255,0.45);'
+    ? 'box-shadow: 0 0 0 3px #ffffff, 0 0 0 6px #8b1f2a, 0 6px 16px rgba(139,31,42,0.3);'
     : ''
   const html = `<span style="
     display:block;

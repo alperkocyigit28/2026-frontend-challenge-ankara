@@ -16,13 +16,13 @@ const EDGE_KINDS: EdgeKind[] = ['sighting', 'message', 'mention']
 
 const COLOR = {
   neutral: '#c8c5bd',
-  podo: '#aa3bff',
+  podo: '#8b1f2a',
   suspectLow: '#e8b4a3',
   suspectMid: '#d87860',
   suspectHigh: '#b8322b',
   ink: '#2a2824',
   board: '#f4ede1',
-  accent: '#aa3bff',
+  accent: '#8b1f2a',
 }
 
 function nodeColor(n: GraphNode) {
@@ -252,7 +252,7 @@ export default function BoardPage() {
                   if (node.isPodo) {
                     ctx.beginPath()
                     ctx.arc(node.x, node.y, r + 2.5 / globalScale, 0, Math.PI * 2)
-                    ctx.strokeStyle = 'rgba(170,59,255,0.5)'
+                    ctx.strokeStyle = 'rgba(139,31,42,0.42)'
                     ctx.lineWidth = 1.5 / globalScale
                     ctx.stroke()
                   }
